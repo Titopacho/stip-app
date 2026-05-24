@@ -243,11 +243,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
         <div class="stat bl" style="cursor:pointer" onclick="abrirMetasRapidas()"><div class="n" id="h-metas">0</div><div class="l">Metas activas ✏️</div></div>
         <div class="stat lime"><div class="n" id="h-peso">—</div><div class="l">Peso hoy (kg)</div></div>
       </div>
-      <button onclick="abrirNotificaciones()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border-radius:8px;background:#1a1d1f;border:1px solid #2e3336;color:#8c96a0;font-size:12px;cursor:pointer;margin-bottom:4px">
-        <span style="font-size:16px">🔔</span>
-        <span id="notif-status-txt">Recordatorios diarios — toca para configurar</span>
-        <span style="margin-left:auto;font-size:12px">›</span>
-      </button>
+
       <p class="sec">Evolución del peso</p>
       <div class="gcrd">
         <div class="ghdr">
@@ -269,7 +265,14 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
           </svg>
         </div>
         <div class="xlbls" id="g-xl"></div>
-      <!-- META INPUT inline -->
+      <!-- META COMPACTA -->
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #2e3336;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="abrirEditarMeta()">
+        <div>
+          <span style="font-size:12px;color:#ffbe4a;font-weight:700">🎯 Meta: <span id="meta-kg-display">—</span> kg</span>
+          <span style="font-size:11px;color:#8c96a0;margin-left:6px" id="meta-dias-display"></span>
+        </div>
+        <span style="font-size:11px;color:#ffbe4a;background:rgba(255,190,71,0.12);border:1px solid rgba(255,190,71,0.3);padding:4px 10px;border-radius:6px">✏️ Editar</span>
+      </div>
       </div>
       <p class="sec">Registrar peso de hoy</p>
       <div class="card">
@@ -466,50 +469,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
     </div>
   </div>
 
-  <!-- MODAL NOTIFICACIONES -->
-  <div class="mwrap" id="mod-notif">
-    <div class="mbox">
-      <h3>🔔 Recordatorios diarios</h3>
-      <div class="notif-toggle">
-        <div class="nt-info">
-          <div class="nt-title">⚖️ Registrar peso</div>
-          <div class="nt-sub">Recordatorio matutino</div>
-        </div>
-        <label class="toggle-sw"><input type="checkbox" id="notif-peso-on" onchange="guardarNotif()"><span class="toggle-slider"></span></label>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:0 4px">
-        <span style="font-size:12px;color:#8c96a0">Hora:</span>
-        <input type="time" class="time-inp" id="notif-peso-hora" value="07:00" onchange="guardarNotif()">
-      </div>
-      <div class="notif-toggle">
-        <div class="nt-info">
-          <div class="nt-title">🎯 Revisar metas</div>
-          <div class="nt-sub">Recordatorio nocturno</div>
-        </div>
-        <label class="toggle-sw"><input type="checkbox" id="notif-metas-on" onchange="guardarNotif()"><span class="toggle-slider"></span></label>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:0 4px">
-        <span style="font-size:12px;color:#8c96a0">Hora:</span>
-        <input type="time" class="time-inp" id="notif-metas-hora" value="20:00" onchange="guardarNotif()">
-      </div>
-      <div class="notif-toggle">
-        <div class="nt-info">
-          <div class="nt-title">🍽️ Registrar comidas</div>
-          <div class="nt-sub">Recordatorio al mediodía</div>
-        </div>
-        <label class="toggle-sw"><input type="checkbox" id="notif-comidas-on" onchange="guardarNotif()"><span class="toggle-slider"></span></label>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:0 4px">
-        <span style="font-size:12px;color:#8c96a0">Hora:</span>
-        <input type="time" class="time-inp" id="notif-comidas-hora" value="13:00" onchange="guardarNotif()">
-      </div>
-      <div id="notif-permiso-aviso" style="display:none;background:#1e2d04;border:1px solid #3a5000;border-radius:8px;padding:10px;font-size:11px;color:#c8f230;margin-bottom:12px;text-align:center">
-        ✅ Notificaciones activadas correctamente
-      </div>
-      <button class="btn-p" onclick="activarNotificaciones()">🔔 Activar recordatorios</button>
-      <button class="btn-s" onclick="cerrarMod('mod-notif')">Cerrar</button>
-    </div>
-  </div>
+  
 
   <!-- MODAL METAS RAPIDAS -->
   <div class="mwrap" id="mod-metas-rapidas">
@@ -522,7 +482,25 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
 
   <div class="mwrap" id="mod-meta"><div class="mbox"><h3>Nueva meta</h3><input class="inp" id="m-nombre" placeholder="Ej: Leer 12 libros, Aprender inglés"><select class="inp" id="m-cat"><option value="salud">💪 Salud / Peso</option><option value="estudio">📚 Estudio</option><option value="habito">🔁 Hábito</option><option value="personal">⭐ Personal</option></select><div class="row" style="margin-bottom:8px"><div style="flex:1"><div style="font-size:11px;color:#8c96a0;margin-bottom:4px">Inicio</div><input class="inp" id="m-ini" type="number" placeholder="0" style="margin-bottom:0"></div><div style="flex:1"><div style="font-size:11px;color:#8c96a0;margin-bottom:4px">Objetivo</div><input class="inp" id="m-obj" type="number" placeholder="100" style="margin-bottom:0"></div></div><input class="inp" id="m-uni" placeholder="Unidad: libros, horas, km, %..."><button class="btn-p" onclick="guardarMeta()">✅ Crear meta</button><button class="btn-s" onclick="cerrarMod('mod-meta')">Cancelar</button></div></div>
   <div class="mwrap" id="mod-upd"><div class="mbox"><h3 id="upd-t">Actualizar progreso</h3><div class="info" id="upd-s" style="margin-bottom:10px"></div><input class="inp" type="number" id="upd-v" placeholder="Nuevo valor actual"><button class="btn-p" onclick="guardarUpd()">✅ Guardar progreso</button><button class="btn-s" onclick="cerrarMod('mod-upd')">Cancelar</button></div></div>
-  <div class="ia-overlay" id="ia-overlay"><div class="ia-spinner"></div><p>Gemini IA analizando tu foto...</p><small>Identificando alimentos y calculando calorías</small></div>
+  <div class="ia-overlay" id="ia-overlay" style="display:none"></div>
+
+  <!-- SCAN OVERLAY -->
+  <div class="scan-overlay" id="scan-overlay">
+    <div style="font-size:13px;color:#c8f230;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Analizando comida</div>
+    <div class="scan-box" id="scan-box">
+      <img id="scan-img-preview" class="scan-img" src="" alt="">
+      <div class="scan-grid"></div>
+      <div class="scan-line"></div>
+      <div class="scan-corners" style="position:absolute;inset:0"></div>
+      <div class="scan-corners2" style="position:absolute;inset:0"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px">
+      <div class="scan-dots"><span></span><span></span><span></span></div>
+      <div class="scan-progress"><div class="scan-progress-fill" id="scan-progress-fill"></div></div>
+      <div class="scan-txt" id="scan-status-txt">Detectando alimentos...</div>
+      <div class="scan-sub" id="scan-sub-txt">Gemini IA procesando imagen</div>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -708,8 +686,8 @@ function drawG(id){
   if(empty)empty.style.display='none';
   if(xl)xl.innerHTML='';
 
-  const W=340, H=180;
-  const padL=44, padR=16, padT=18, padB=30;
+  const W=360, H=190;
+  const padL=36, padR=8, padT=16, padB=28;
   const cW=W-padL-padR, cH=H-padT-padB;
 
   // Y range: round to nearest 20, add margin
@@ -723,7 +701,7 @@ function drawG(id){
   const range=maxV-minV||20;
 
   function toX(i,total){
-    if(total<=1)return padL+cW*0.25;
+    if(total<=1)return padL+cW*0.08;
     return padL+(i/(total-1))*cW;
   }
   function toY(v){return padT+(1-(v-minV)/range)*cH;}
@@ -814,7 +792,7 @@ function drawG(id){
   });
 
   // Update SVG
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('viewBox','0 0 360 190');
   const gdg=document.getElementById(id+'-dg');
   const gap=document.getElementById(id+'-ap');
   const glp=document.getElementById(id+'-lp');
@@ -905,13 +883,13 @@ window.handleFoto=function(e){
 };
 
 async function analizarConGemini(b64,mime){
-  document.getElementById('ia-overlay').classList.add('show');
+  // scan overlay already showing
   try{
     const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_KEY}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{text:'Analiza esta imagen de comida. Responde SOLO en JSON sin markdown:\n{"nombre":"nombre del plato en español","calorias":número_entero,"proteinas":número_entero,"carbohidratos":número_entero,"grasas":número_entero,"descripcion":"alimentos detectados en 1 línea","consejo":"consejo nutricional breve en español"}'}]}],generationConfig:{temperature:0.1,maxOutputTokens:400}})});
     const data=await resp.json();if(data.error)throw new Error(data.error.message);
     const txt=data.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
     const p=JSON.parse(txt);
-    document.getElementById('ia-overlay').classList.remove('show');
+    ocultarScan();
     document.getElementById('f-nombre').value=p.nombre||'';
       document.getElementById('f-cal').value=p.calorias||0;
       document.getElementById('f-prot').value=p.proteinas||0;
@@ -920,7 +898,7 @@ async function analizarConGemini(b64,mime){
     document.getElementById('ia-res-area').innerHTML=`<div class="ia-res"><h4>🤖 Gemini detectó: ${p.nombre}</h4><div class="ia-macros"><div class="ia-macro"><div class="v" style="color:#c8f230">${p.calorias}</div><div class="l">kcal</div></div><div class="ia-macro"><div class="v" style="color:#5ab4ff">${p.proteinas}g</div><div class="l">Proteína</div></div><div class="ia-macro"><div class="v" style="color:#ffbe4a">${p.carbohidratos}g</div><div class="l">Carbos</div></div></div><div class="ia-tip">🥑 Grasas: ${p.grasas}g · ${p.descripcion}<br><strong style="color:#c8f230">💡 ${p.consejo}</strong></div></div>`;
     document.getElementById('up-txt').textContent='Foto analizada ✓';toast('Gemini: ~'+p.calorias+' kcal 🤖');
   }catch(err){
-    document.getElementById('ia-overlay').classList.remove('show');
+    ocultarScan();
     const msg=err.message||'Error desconocido';
     document.getElementById('ia-res-area').innerHTML=`<div style="background:#2a1500;border:1px solid #6b3000;border-radius:8px;padding:12px;margin-bottom:8px"><p style="font-size:12px;color:#ffbe4a">⚠️ No se pudo analizar la foto. Busca el alimento manualmente.</p><p style="font-size:10px;color:#6b3000;margin-top:4px">${msg}</p></div>`;
     toast('Busca el alimento manualmente','#ffbe4a');
@@ -1253,83 +1231,7 @@ if('serviceWorker' in navigator){
 }
 
 // ===== NOTIFICACIONES =====
-window.abrirNotificaciones=function(){
-  document.getElementById('mod-notif').classList.add('open');
-  // Load saved settings
-  const cfg=S.notifCfg||{};
-  document.getElementById('notif-peso-on').checked=cfg.pesoOn||false;
-  document.getElementById('notif-peso-hora').value=cfg.pesoHora||'07:00';
-  document.getElementById('notif-metas-on').checked=cfg.metasOn||false;
-  document.getElementById('notif-metas-hora').value=cfg.metasHora||'20:00';
-  document.getElementById('notif-comidas-on').checked=cfg.comidasOn||false;
-  document.getElementById('notif-comidas-hora').value=cfg.comidasHora||'13:00';
-};
 
-window.guardarNotif=async function(){
-  S.notifCfg={
-    pesoOn:document.getElementById('notif-peso-on').checked,
-    pesoHora:document.getElementById('notif-peso-hora').value,
-    metasOn:document.getElementById('notif-metas-on').checked,
-    metasHora:document.getElementById('notif-metas-hora').value,
-    comidasOn:document.getElementById('notif-comidas-on').checked,
-    comidasHora:document.getElementById('notif-comidas-hora').value,
-  };
-  await guardar();
-  programarNotificaciones();
-};
-
-window.activarNotificaciones=async function(){
-  if(!('Notification' in window)){toast('Tu navegador no soporta notificaciones','#ff5068');return;}
-  const perm=await Notification.requestPermission();
-  if(perm==='granted'){
-    await guardarNotif();
-    document.getElementById('notif-permiso-aviso').style.display='block';
-    actualizarStatusNotif();
-    toast('¡Recordatorios activados! 🔔');
-  } else {
-    toast('Permiso de notificaciones denegado. Actívalo en Configuración del celular.','#ff5068');
-  }
-};
-
-function actualizarStatusNotif(){
-  const cfg=S.notifCfg||{};
-  const activos=[];
-  if(cfg.pesoOn)activos.push('⚖️ '+cfg.pesoHora);
-  if(cfg.metasOn)activos.push('🎯 '+cfg.metasHora);
-  if(cfg.comidasOn)activos.push('🍽️ '+cfg.comidasHora);
-  const el=document.getElementById('notif-status-txt');
-  if(el){
-    if(activos.length>0){el.textContent='🔔 Recordatorios: '+activos.join(' · ');el.style.color='#c8f230';}
-    else{el.textContent='Recordatorios diarios — toca para configurar';el.style.color='#8c96a0';}
-  }
-}
-
-function programarNotificaciones(){
-  if(!('Notification' in window)||Notification.permission!=='granted')return;
-  const cfg=S.notifCfg||{};
-  // Clear existing timers
-  if(window._notifTimers){window._notifTimers.forEach(t=>clearTimeout(t));}
-  window._notifTimers=[];
-
-  function scheduleDaily(hora,titulo,cuerpo){
-    const ahora=new Date();
-    const [h,m]=hora.split(':').map(Number);
-    const target=new Date();
-    target.setHours(h,m,0,0);
-    if(target<=ahora)target.setDate(target.getDate()+1);
-    const ms=target-ahora;
-    const t=setTimeout(()=>{
-      new Notification(titulo,{body:cuerpo,icon:'/icon-192.png',badge:'/icon-192.png'});
-      scheduleDaily(hora,titulo,cuerpo); // reschedule for next day
-    },ms);
-    window._notifTimers.push(t);
-  }
-
-  if(cfg.pesoOn)scheduleDaily(cfg.pesoHora||'07:00','⚖️ Stip — Registra tu peso','Buenos días! No olvides registrar tu peso de hoy para seguir tu progreso 💪');
-  if(cfg.metasOn)scheduleDaily(cfg.metasHora||'20:00','🎯 Stip — Revisa tus metas','¿Cómo van tus metas hoy? Tómate un momento para actualizar tu progreso 🎯');
-  if(cfg.comidasOn)scheduleDaily(cfg.comidasHora||'13:00','🍽️ Stip — Registra tus comidas','¿Ya registraste lo que comiste hoy? Mantén el seguimiento de tus calorías 🥗');
-  actualizarStatusNotif();
-}
 
 // ===== METAS RÁPIDAS DESDE INICIO =====
 window.abrirMetasRapidas=function(){
@@ -1403,11 +1305,10 @@ window.toggleRecMeta=async function(i){
 
 // Init notifications on app load
 setTimeout(()=>{
-  if(S.notifCfg&&Notification.permission==='granted')programarNotificaciones();
+  // Restore per-meta notifications on load
   if(S.metas&&Notification.permission==='granted'){
     S.metas.filter(m=>m.recOn).forEach(m=>programarRecordatorioMeta(m.n,m.recHora||'08:00'));
   }
-  actualizarStatusNotif();
 },1000);
 </script>
 </body>
