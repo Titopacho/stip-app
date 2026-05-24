@@ -1052,9 +1052,10 @@ function renderMetas(){
   if(!filt.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#8c96a0;font-size:13px">No hay metas aquí.<br>¡Crea tu primera! 🎯</div>';return;}
   el.innerHTML=filt.map(m=>{
     const ri=metas.indexOf(m),p=pct(m),col=CAT_COLORS[m.cat];
+    const recHoraStr=m.recHora||'08:00';
     const recBadge=m.recOn
-      ?`<span style="font-size:10px;color:#c8f230;font-weight:600">🔔 ${m.recHora||'08:00'}</span>`
-      :`<span style="font-size:10px;color:#444c52">🔕 Sin recordatorio</span>`;
+      ?'<span style="font-size:10px;color:#c8f230;font-weight:600">🔔 '+recHoraStr+'</span>'
+      :'<span style="font-size:10px;color:#444c52">🔕 Sin recordatorio</span>';
     return `<div class="mcrd">
       <div class="mtop">
         <div class="mico" style="background:${col}18;color:${col}"><i class="ti ${CAT_ICONS[m.cat]}" style="font-size:19px"></i></div>
