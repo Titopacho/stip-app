@@ -256,7 +256,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
         </div>
         <div class="swrap">
           <div class="cempty" id="g-empty">Agrega registros de peso<br>para ver tu evolución 📈</div>
-          <svg id="g-svg" viewBox="0 0 330 110" preserveAspectRatio="none" style="display:none" xmlns="http://www.w3.org/2000/svg">
+          <svg id="g-svg" viewBox="0 0 330 160" preserveAspectRatio="none" style="display:none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c8f230" stop-opacity="0.3"/><stop offset="100%" stop-color="#c8f230" stop-opacity="0"/></linearGradient>
               <linearGradient id="gl" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8ab800"/><stop offset="100%" stop-color="#c8f230"/></linearGradient>
@@ -445,7 +445,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
         <div class="ghdr"><div><div class="gt">Todos los registros</div><div class="gs" id="p-rango">—</div></div><div><div class="gdv" id="p-delta" style="color:#c8f230">—</div><div class="gdl">total bajado</div></div></div>
         <div class="swrap">
           <div class="cempty" id="p-empty">Sin datos aún</div>
-          <svg id="p-svg" viewBox="0 0 330 110" preserveAspectRatio="none" style="display:none" xmlns="http://www.w3.org/2000/svg">
+          <svg id="p-svg" viewBox="0 0 330 160" preserveAspectRatio="none" style="display:none" xmlns="http://www.w3.org/2000/svg">
             <defs><linearGradient id="pa" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5ab4ff" stop-opacity="0.25"/><stop offset="100%" stop-color="#5ab4ff" stop-opacity="0"/></linearGradient></defs>
             <path id="p-ap" fill="url(#pa)"/><path id="p-lp" fill="none" stroke="#5ab4ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><g id="p-dg"></g>
           </svg>
@@ -695,17 +695,13 @@ function drawG(id){
   const svg=document.getElementById(id+'-svg');
   const empty=document.getElementById(id+'-empty');
   const xl=document.getElementById(id+'-xl');
-  const ap=document.getElementById(id+'-ap');
-  const lp=document.getElementById(id+'-lp');
-  const dg=document.getElementById(id+'-dg');
   const dtEl=document.getElementById(id==='g'?'g-delta':'p-delta');
   const rnEl=document.getElementById(id==='g'?'g-rango':'p-rango');
   const metaPeso=id==='g'?S.metaPeso:null;
 
-  // Need at least 1 peso to show anything
   if(!pesos.length){
     if(svg)svg.style.display='none';
-    if(empty)empty.style.display='flex';
+    if(empty){empty.style.display='flex';}
     if(xl)xl.innerHTML='';
     if(dtEl)dtEl.textContent='— kg';
     if(rnEl)rnEl.textContent='Registra tu primer peso';
@@ -715,171 +711,123 @@ function drawG(id){
   if(svg)svg.style.display='block';
   if(empty)empty.style.display='none';
 
-  const W=330,H=130,pad=14;
+  // Dimensions with space for Y axis labels on left
+  const W=330,H=160;
+  const padL=38,padR=14,padT=14,padB=24;
+  const chartW=W-padL-padR;
+  const chartH=H-padT-padB;
 
-  // --- Calculate Y range with 5kg margin ---
+  // Y range with 5kg margin
   const vals=pesos.map(p=>p.v);
   let minV=Math.min(...vals);
   let maxV=Math.max(...vals);
-  if(metaPeso&&metaPeso<minV)minV=metaPeso;
-  if(metaPeso&&metaPeso>maxV)maxV=metaPeso;
-  // Add 5kg margin top and bottom
-  minV=minV-5;
-  maxV=maxV+5;
+  if(metaPeso){minV=Math.min(minV,metaPeso);maxV=Math.max(maxV,metaPeso);}
+  minV=Math.floor(minV-5);
+  maxV=Math.ceil(maxV+5);
   const range=maxV-minV||10;
 
-  function toY(v){return pad+(1-(v-minV)/range)*(H-pad*2);}
+  function toX(i,total){
+    if(total<=1)return padL+chartW*0.35;
+    return padL+(i/(total-1))*chartW;
+  }
+  function toY(v){return padT+(1-(v-minV)/range)*chartH;}
 
-  // --- Draw weight line/points ---
-  // X positions: if only 1 point, put it at 30% from left
-  // if meta exists, weight points go left side, meta point goes right
-  const hasMetaPoint=metaPeso&&pesos.length>=1;
-  const totalXPoints=hasMetaPoint?pesos.length+1:pesos.length;
+  // Build SVG content
+  let svgHTML='';
 
-  let pts;
-  if(pesos.length===1&&hasMetaPoint){
-    // Single weight point at 20%, meta point at 80%
-    pts=[{x:W*0.20,y:toY(pesos[0].v),v:pesos[0].v,isWeight:true,idx:0}];
-  } else {
-    pts=pesos.map((p,i)=>({
-      x:pad+(i/(Math.max(pesos.length-1,1)))*(W*0.75-pad),
-      y:toY(p.v),v:p.v,isWeight:true,idx:i
-    }));
+  // Y axis labels and grid lines
+  const ySteps=5;
+  for(let i=0;i<=ySteps;i++){
+    const v=minV+Math.round((range/ySteps)*i);
+    const y=toY(v);
+    // Grid line
+    svgHTML+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+    // Y label
+    svgHTML+=`<text x="${padL-4}" y="${(y+3.5).toFixed(1)}" fill="#5a6a70" font-size="9" font-family="system-ui" text-anchor="end">${v}</text>`;
   }
 
-  // Draw area fill only if 2+ points
-  if(pesos.length>=2){
-    const ls=pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' L');
-    if(ap)ap.setAttribute('d','M'+ls+' L'+pts[pts.length-1].x.toFixed(1)+','+(H-pad/2)+' L'+pts[0].x.toFixed(1)+','+(H-pad/2)+' Z');
-    if(lp)lp.setAttribute('d','M'+ls);
-  } else {
-    if(ap)ap.setAttribute('d','');
-    if(lp)lp.setAttribute('d','');
+  // X positions for weight points
+  const pts=pesos.map((p,i)=>({
+    x:toX(i,pesos.length),
+    y:toY(p.v),
+    v:p.v,
+    f:p.f
+  }));
+
+  // Area fill (2+ points)
+  if(pts.length>=2){
+    const areaD='M'+pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' L')+
+      ' L'+pts[pts.length-1].x.toFixed(1)+','+(padT+chartH)+
+      ' L'+pts[0].x.toFixed(1)+','+(padT+chartH)+' Z';
+    svgHTML+=`<path fill="url(#ga)" d="${areaD}"/>`;
+    const lineD='M'+pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' L');
+    svgHTML+=`<path fill="none" stroke="url(#gl)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="${lineD}"/>`;
   }
 
-  // Draw dots
-  if(dg)dg.innerHTML='';
+  // Meta horizontal line
+  if(metaPeso&&id==='g'){
+    const metaY=toY(metaPeso);
+    svgHTML+=`<line x1="${padL}" y1="${metaY.toFixed(1)}" x2="${W-padR}" y2="${metaY.toFixed(1)}" stroke="#ffbe4a" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+    svgHTML+=`<text x="${W-padR-2}" y="${(metaY-4).toFixed(1)}" fill="#ffbe4a" font-size="9" font-family="system-ui" font-weight="700" text-anchor="end">meta ${metaPeso}kg</text>`;
+  }
+
+  // Weight dots
   pts.forEach((pt,i)=>{
-    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c.setAttribute('cx',pt.x.toFixed(1));
-    c.setAttribute('cy',pt.y.toFixed(1));
-    c.setAttribute('r',i===pts.length-1?5:3);
-    c.setAttribute('fill',i===pts.length-1?'#c8f230':'rgba(200,242,48,0.6)');
-    if(dg)dg.appendChild(c);
-    // Label for single point
-    if(pesos.length===1){
-      const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-      t.setAttribute('x',(pt.x+8).toFixed(1));
-      t.setAttribute('y',(pt.y-6).toFixed(1));
-      t.setAttribute('fill','#c8f230');
-      t.setAttribute('font-size','10');
-      t.setAttribute('font-family','system-ui');
-      t.setAttribute('font-weight','700');
-      t.textContent=pt.v.toFixed(1)+' kg';
-      if(dg)dg.appendChild(t);
+    const isLast=i===pts.length-1;
+    const r=isLast?5:3;
+    const col=isLast?'#c8f230':'rgba(200,242,48,0.6)';
+    svgHTML+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${r}" fill="${col}"/>`;
+    // Value label on last point
+    if(isLast){
+      const labelX=pt.x+7>W-padR-20?pt.x-7:pt.x+7;
+      const anchor=pt.x+7>W-padR-20?'end':'start';
+      svgHTML+=`<text x="${labelX.toFixed(1)}" y="${(pt.y-7).toFixed(1)}" fill="#c8f230" font-size="10" font-family="system-ui" font-weight="700" text-anchor="${anchor}">${pt.v.toFixed(1)}</text>`;
     }
   });
 
-  // --- Draw META line and point ---
-  const metaLine=document.getElementById('g-meta-line');
-  const metaLabel=document.getElementById('g-meta-label');
-  const metaDot=document.getElementById('g-meta-dot');
-  const metaDate=document.getElementById('g-meta-date');
+  // X axis date labels
+  const showIdxs=pesos.length===1?[0]:[0,Math.floor(pesos.length/2),pesos.length-1].filter((v,i,a)=>a.indexOf(v)===i&&v<pesos.length);
+  showIdxs.forEach(i=>{
+    const pt=pts[i];
+    const d=new Date(pesos[i].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
+    svgHTML+=`<text x="${pt.x.toFixed(1)}" y="${(padT+chartH+16).toFixed(1)}" fill="#5a6a70" font-size="9" font-family="system-ui" text-anchor="middle">${d}</text>`;
+  });
 
-  if(metaPeso&&id==='g'){
-    const metaY=toY(metaPeso);
-    const metaX=pesos.length===1?W*0.80:W-pad;
+  // Update SVG inner content
+  // Keep defs, replace g-dg content
+  const gdg=document.getElementById(id+'-dg');
+  const gap=document.getElementById(id+'-ap');
+  const glp=document.getElementById(id+'-lp');
+  const gml=document.getElementById('g-meta-line');
+  const gmla=document.getElementById('g-meta-label');
+  const gmd=document.getElementById('g-meta-dot');
+  const gmdt=document.getElementById('g-meta-date');
+  // Hide old elements
+  if(gap)gap.setAttribute('d','');
+  if(glp)glp.setAttribute('d','');
+  if(gml)gml.style.display='none';
+  if(gmla)gmla.style.display='none';
+  if(gmd)gmd.style.display='none';
+  if(gmdt)gmdt.style.display='none';
 
-    // Horizontal dashed line from last weight point to meta point
-    const lastPt=pts[pts.length-1];
-    if(metaLine){
-      metaLine.setAttribute('x1',lastPt.x.toFixed(1));
-      metaLine.setAttribute('y1',lastPt.y.toFixed(1));
-      metaLine.setAttribute('x2',metaX.toFixed(1));
-      metaLine.setAttribute('y2',metaY.toFixed(1));
-      metaLine.style.display='';
-      metaLine.setAttribute('stroke','#ffbe4a');
-      metaLine.setAttribute('stroke-dasharray','5,4');
-      metaLine.setAttribute('stroke-width','1.5');
-    }
-    // Meta dot
-    if(metaDot){
-      metaDot.setAttribute('cx',metaX.toFixed(1));
-      metaDot.setAttribute('cy',metaY.toFixed(1));
-      metaDot.setAttribute('r','5');
-      metaDot.style.display='';
-    }
-    // Meta label
-    if(metaLabel){
-      metaLabel.setAttribute('x',(metaX-28).toFixed(1));
-      metaLabel.setAttribute('y',(metaY-8).toFixed(1));
-      metaLabel.textContent=metaPeso+' kg';
-      metaLabel.style.display='';
-    }
-    // Meta date label below dot
-    if(metaDate){
-      // Get estimated days
-      const diasEl=document.getElementById('meta-dias-display');
-      const diasTxt=diasEl?diasEl.textContent.replace(' días','').replace('· ','').trim():'';
-      const dias=parseInt(diasTxt)||0;
-      if(dias>0){
-        const fecha=new Date();
-        fecha.setDate(fecha.getDate()+dias);
-        const mes=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][fecha.getMonth()];
-        metaDate.setAttribute('x',(metaX-22).toFixed(1));
-        metaDate.setAttribute('y',(metaY+16).toFixed(1));
-        metaDate.textContent=fecha.getDate()+' '+mes;
-        metaDate.style.display='';
-      } else {
-        metaDate.style.display='none';
-      }
-    }
-  } else {
-    if(metaLine)metaLine.style.display='none';
-    if(metaLabel)metaLabel.style.display='none';
-    if(metaDot)metaDot.style.display='none';
-    if(metaDate)metaDate.style.display='none';
-  }
+  // Use gdg to hold all our custom SVG
+  if(gdg)gdg.innerHTML=svgHTML;
 
-  // --- Delta and range labels ---
-  const ini=pesos[0].v,fin=pesos[pesos.length-1].v,diff=ini-fin;
-  if(dtEl){dtEl.textContent=(diff>0?'−':'+')+Math.abs(diff).toFixed(1)+' kg';dtEl.style.color=diff>0?'#c8f230':'#ff5068';}
-  if(rnEl){
-    if(pesos.length===1){
-      rnEl.textContent=new Date(pesos[0].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'})+' · 1 registro';
-    } else {
+  // Clear xl (we put dates inside SVG now)
+  if(xl)xl.innerHTML='';
+
+  // Delta
+  if(pesos.length>=2){
+    const ini=pesos[0].v,fin=pesos[pesos.length-1].v,diff=ini-fin;
+    if(dtEl){dtEl.textContent=(diff>0?'−':'+')+Math.abs(diff).toFixed(1)+' kg';dtEl.style.color=diff>0?'#c8f230':'#ff5068';}
+    if(rnEl){
       const d1=new Date(pesos[0].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
       const d2=new Date(pesos[pesos.length-1].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
       rnEl.textContent=d1+' → '+d2+' · '+pesos.length+' registros';
     }
-  }
-
-  // --- X labels ---
-  if(xl){
-    xl.innerHTML='';
-    const showIdxs=pesos.length===1?[0]:[0,Math.floor(pesos.length/2),pesos.length-1].filter((v,i,a)=>a.indexOf(v)===i);
-    showIdxs.forEach(i=>{
-      const s=document.createElement('span');
-      s.textContent=new Date(pesos[i].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
-      const xPct=pesos.length===1?20:((pad+(i/(Math.max(pesos.length-1,1)))*(W*0.75-pad))/W*100);
-      s.style.left=xPct.toFixed(1)+'%';
-      xl.appendChild(s);
-    });
-    // Meta date in x labels
-    if(metaPeso&&id==='g'){
-      const diasEl=document.getElementById('meta-dias-display');
-      const diasTxt=diasEl?diasEl.textContent.replace(' días','').replace('· ','').trim():'';
-      const dias=parseInt(diasTxt)||0;
-      if(dias>0){
-        const s=document.createElement('span');
-        const fecha=new Date();fecha.setDate(fecha.getDate()+dias);
-        s.textContent='🎯 '+fecha.toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
-        s.style.left=(pesos.length===1?80:90)+'%';
-        s.style.color='#ffbe4a';
-        s.style.fontWeight='700';
-        xl.appendChild(s);
-      }
-    }
+  } else {
+    if(dtEl)dtEl.textContent='+0.0 kg';
+    if(rnEl)rnEl.textContent=new Date(pesos[0].f).toLocaleDateString('es-CO',{day:'2-digit',month:'long'})+' · 1 registro';
   }
 }
 
