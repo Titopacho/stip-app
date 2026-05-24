@@ -1401,16 +1401,21 @@ function programarRecordatorioMeta(nombre,hora){
 }
 
 window.abrirNotifMeta=function(i){
-  window._editNotifIdx=i;
-  const m=S.metas[i];
-  const titulo=document.getElementById('notif-meta-titulo');
-  const recOn=document.getElementById('edit-rec-on');
-  const recHora=document.getElementById('edit-rec-hora');
-  const modal=document.getElementById('mod-meta-notif');
-  if(titulo)titulo.textContent='🔔 '+m.n;
-  if(recOn)recOn.checked=m.recOn||false;
-  if(recHora)recHora.value=m.recHora||'08:00';
-  if(modal){modal.classList.add('open');modal.style.display='flex';}
+  try{
+    window._editNotifIdx=i;
+    const m=(S.metas||[])[i];
+    if(!m){toast('Error: meta no encontrada','#ff5068');return;}
+    const titulo=document.getElementById('notif-meta-titulo');
+    const recOn=document.getElementById('edit-rec-on');
+    const recHora=document.getElementById('edit-rec-hora');
+    const modal=document.getElementById('mod-meta-notif');
+    if(!modal){toast('Error: modal no encontrado','#ff5068');return;}
+    if(titulo)titulo.textContent='🔔 '+m.n;
+    if(recOn)recOn.checked=!!m.recOn;
+    if(recHora)recHora.value=m.recHora||'08:00';
+    modal.style.display='flex';
+    modal.classList.add('open');
+  }catch(e){toast('Error: '+e.message,'#ff5068');}
 };
 
 window.guardarNotifMeta=async function(){
