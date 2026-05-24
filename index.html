@@ -503,17 +503,8 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
 
   <div class="mwrap" id="mod-meta"><div class="mbox"><h3>Nueva meta</h3><input class="inp" id="m-nombre" placeholder="Ej: Leer 12 libros, Aprender inglés"><select class="inp" id="m-cat"><option value="salud">💪 Salud / Peso</option><option value="estudio">📚 Estudio</option><option value="habito">🔁 Hábito</option><option value="personal">⭐ Personal</option></select><div class="row" style="margin-bottom:8px"><div style="flex:1"><div style="font-size:11px;color:#8c96a0;margin-bottom:4px">Inicio</div><input class="inp" id="m-ini" type="number" placeholder="0" style="margin-bottom:0"></div><div style="flex:1"><div style="font-size:11px;color:#8c96a0;margin-bottom:4px">Objetivo</div><input class="inp" id="m-obj" type="number" placeholder="100" style="margin-bottom:0"></div></div><input class="inp" id="m-uni" placeholder="Unidad: libros, horas, km, %..."><button class="btn-p" onclick="guardarMeta()">✅ Crear meta</button><button class="btn-s" onclick="cerrarMod('mod-meta')">Cancelar</button></div></div>
   <div class="mwrap" id="mod-upd"><div class="mbox"><h3 id="upd-t">Actualizar progreso</h3><div class="info" id="upd-s" style="margin-bottom:10px"></div><input class="inp" type="number" id="upd-v" placeholder="Nuevo valor actual"><button class="btn-p" onclick="guardarUpd()">✅ Guardar progreso</button><button class="btn-s" onclick="cerrarMod('mod-upd')">Cancelar</button></div></div>
-  <div class="ia-overlay" id="ia-overlay" style="display:none"><div class="ia-spinner"></div><p>Gemini IA analizando tu foto...</p><small>Identificando alimentos y calculando calorías</small></div>
-
   
-    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px">
-      <div class="scan-dots"><span></span><span></span><span></span></div>
-      <div class="scan-progress"><div class="scan-progress-fill" id="scan-progress-fill"></div></div>
-      <div class="scan-txt" id="scan-status-txt">Detectando alimentos...</div>
-      <div class="scan-sub" id="scan-sub-txt">Gemini IA procesando imagen</div>
-    </div>
-  </div>
-</div>
+<div class="ia-overlay" id="ia-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:60;align-items:center;justify-content:center;flex-direction:column;gap:16px"><div class="ia-spinner"></div><p style="color:#f4f4f4;font-size:15px;font-weight:600">Analizando tu foto...</p></div>
 <div class="toast" id="toast"></div>
 
 <!-- FIREBASE SDK -->
