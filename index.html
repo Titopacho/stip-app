@@ -63,7 +63,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
 .gs{font-size:11px;color:#8c96a0;margin-top:2px}
 .gdv{font-size:18px;font-weight:700;text-align:right}
 .gdl{font-size:10px;color:#8c96a0;text-align:right}
-.swrap{position:relative;width:100%;height:115px}
+.swrap{position:relative;width:100%;height:185px}
 .swrap svg{width:100%;height:100%}
 .cempty{height:80px;display:flex;align-items:center;justify-content:center;color:#8c96a0;font-size:12px;text-align:center;line-height:1.6}
 .xlbls{position:relative;height:14px;margin-top:3px}
@@ -697,7 +697,7 @@ function drawG(id){
 
   if(!pesos.length){
     if(svg)svg.style.display='none';
-    if(empty){empty.style.display='flex';}
+    if(empty)empty.style.display='flex';
     if(xl)xl.innerHTML='';
     if(dtEl)dtEl.textContent='— kg';
     if(rnEl)rnEl.textContent='Registra tu primer peso';
@@ -706,124 +706,134 @@ function drawG(id){
 
   if(svg)svg.style.display='block';
   if(empty)empty.style.display='none';
+  if(xl)xl.innerHTML='';
 
-  // Dimensions with space for Y axis labels on left
-  const W=330,H=160;
-  const padL=38,padR=14,padT=14,padB=24;
-  const chartW=W-padL-padR;
-  const chartH=H-padT-padB;
+  const W=340, H=180;
+  const padL=44, padR=16, padT=18, padB=30;
+  const cW=W-padL-padR, cH=H-padT-padB;
 
-  // Y range with 5kg margin
+  // Y range: round to nearest 20, add margin
   const vals=pesos.map(p=>p.v);
   let minV=Math.min(...vals);
   let maxV=Math.max(...vals);
   if(metaPeso){minV=Math.min(minV,metaPeso);maxV=Math.max(maxV,metaPeso);}
-  minV=Math.floor(minV-5);
-  maxV=Math.ceil(maxV+5);
-  const range=maxV-minV||10;
+  // Round to nearest 20
+  minV=Math.floor((minV-8)/20)*20;
+  maxV=Math.ceil((maxV+8)/20)*20;
+  const range=maxV-minV||20;
 
   function toX(i,total){
-    if(total<=1)return padL+chartW*0.35;
-    return padL+(i/(total-1))*chartW;
+    if(total<=1)return padL+cW*0.25;
+    return padL+(i/(total-1))*cW;
   }
-  function toY(v){return padT+(1-(v-minV)/range)*chartH;}
+  function toY(v){return padT+(1-(v-minV)/range)*cH;}
 
-  // Build SVG content
-  let svgHTML='';
+  let html='';
 
-  // Y axis labels and grid lines
-  const ySteps=5;
-  for(let i=0;i<=ySteps;i++){
-    const v=minV+Math.round((range/ySteps)*i);
+  // Background subtle gradient area
+  html+=`<defs>
+    <linearGradient id="ga2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8f230" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#c8f230" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gl2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8ab800"/>
+      <stop offset="100%" stop-color="#c8f230"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`;
+
+  // Y axis grid lines and labels — every 20kg
+  for(let v=minV;v<=maxV;v+=20){
     const y=toY(v);
+    if(y<padT-2||y>padT+cH+2)continue;
     // Grid line
-    svgHTML+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
-    // Y label
-    svgHTML+=`<text x="${padL-4}" y="${(y+3.5).toFixed(1)}" fill="#5a6a70" font-size="9" font-family="system-ui" text-anchor="end">${v}</text>`;
+    html+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    // Label
+    html+=`<text x="${padL-6}" y="${(y+3.5).toFixed(1)}" fill="#4a5a60" font-size="10" font-family="system-ui" font-weight="500" text-anchor="end">${v}</text>`;
   }
 
-  // X positions for weight points
-  const pts=pesos.map((p,i)=>({
-    x:toX(i,pesos.length),
-    y:toY(p.v),
-    v:p.v,
-    f:p.f
-  }));
-
-  // Area fill (2+ points)
-  if(pts.length>=2){
-    const areaD='M'+pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' L')+
-      ' L'+pts[pts.length-1].x.toFixed(1)+','+(padT+chartH)+
-      ' L'+pts[0].x.toFixed(1)+','+(padT+chartH)+' Z';
-    svgHTML+=`<path fill="url(#ga)" d="${areaD}"/>`;
-    const lineD='M'+pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' L');
-    svgHTML+=`<path fill="none" stroke="url(#gl)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="${lineD}"/>`;
-  }
-
-  // Meta horizontal line
+  // Meta horizontal line (behind everything)
   if(metaPeso&&id==='g'){
     const metaY=toY(metaPeso);
-    svgHTML+=`<line x1="${padL}" y1="${metaY.toFixed(1)}" x2="${W-padR}" y2="${metaY.toFixed(1)}" stroke="#ffbe4a" stroke-width="1.5" stroke-dasharray="6,4"/>`;
-    svgHTML+=`<text x="${W-padR-2}" y="${(metaY-4).toFixed(1)}" fill="#ffbe4a" font-size="9" font-family="system-ui" font-weight="700" text-anchor="end">meta ${metaPeso}kg</text>`;
+    html+=`<line x1="${padL}" y1="${metaY.toFixed(1)}" x2="${W-padR}" y2="${metaY.toFixed(1)}" stroke="#ffbe4a" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.8"/>`;
+    html+=`<text x="${W-padR-3}" y="${(metaY-5).toFixed(1)}" fill="#ffbe4a" font-size="9" font-family="system-ui" font-weight="700" text-anchor="end">meta ${metaPeso}kg</text>`;
   }
 
-  // Weight dots
+  // Area fill + line (2+ points)
+  const pts=pesos.map((p,i)=>({x:toX(i,pesos.length),y:toY(p.v),v:p.v,f:p.f}));
+
+  if(pts.length>=2){
+    const aPath='M'+pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' L')+
+      ` L${pts[pts.length-1].x.toFixed(1)},${(padT+cH).toFixed(1)} L${pts[0].x.toFixed(1)},${(padT+cH).toFixed(1)} Z`;
+    html+=`<path d="${aPath}" fill="url(#ga2)"/>`;
+    // Smooth line using cubic bezier
+    let lPath=`M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+    for(let i=1;i<pts.length;i++){
+      const prev=pts[i-1],curr=pts[i];
+      const cpx=(prev.x+curr.x)/2;
+      lPath+=` C${cpx.toFixed(1)},${prev.y.toFixed(1)} ${cpx.toFixed(1)},${curr.y.toFixed(1)} ${curr.x.toFixed(1)},${curr.y.toFixed(1)}`;
+    }
+    html+=`<path d="${lPath}" fill="none" stroke="url(#gl2)" stroke-width="2.5" stroke-linecap="round"/>`;
+  }
+
+  // X axis day labels and vertical tick marks
+  const firstDate=new Date(pesos[0].f);
   pts.forEach((pt,i)=>{
-    const isLast=i===pts.length-1;
-    const r=isLast?5:3;
-    const col=isLast?'#c8f230':'rgba(200,242,48,0.6)';
-    svgHTML+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${r}" fill="${col}"/>`;
-    // Value label on last point
-    if(isLast){
-      const labelX=pt.x+7>W-padR-20?pt.x-7:pt.x+7;
-      const anchor=pt.x+7>W-padR-20?'end':'start';
-      svgHTML+=`<text x="${labelX.toFixed(1)}" y="${(pt.y-7).toFixed(1)}" fill="#c8f230" font-size="10" font-family="system-ui" font-weight="700" text-anchor="${anchor}">${pt.v.toFixed(1)}</text>`;
+    const dayNum=Math.round((new Date(pesos[i].f)-firstDate)/(1000*60*60*24))+1;
+    const label=pesos.length<=1?'Día 1':`D${dayNum}`;
+    // Only show some labels to avoid crowding
+    const showLabel=pesos.length<=7||(i===0||i===pesos.length-1||i%Math.ceil(pesos.length/5)===0);
+    if(showLabel){
+      html+=`<line x1="${pt.x.toFixed(1)}" y1="${(padT+cH).toFixed(1)}" x2="${pt.x.toFixed(1)}" y2="${(padT+cH+4).toFixed(1)}" stroke="#4a5a60" stroke-width="1"/>`;
+      html+=`<text x="${pt.x.toFixed(1)}" y="${(padT+cH+15).toFixed(1)}" fill="#4a5a60" font-size="9.5" font-family="system-ui" text-anchor="middle">${label}</text>`;
     }
   });
 
-  // X axis date labels
-  const showIdxs=pesos.length===1?[0]:[0,Math.floor(pesos.length/2),pesos.length-1].filter((v,i,a)=>a.indexOf(v)===i&&v<pesos.length);
-  showIdxs.forEach(i=>{
-    const pt=pts[i];
-    const d=new Date(pesos[i].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
-    svgHTML+=`<text x="${pt.x.toFixed(1)}" y="${(padT+chartH+16).toFixed(1)}" fill="#5a6a70" font-size="9" font-family="system-ui" text-anchor="middle">${d}</text>`;
+  // Dots with glow on last
+  pts.forEach((pt,i)=>{
+    const isLast=i===pts.length-1;
+    if(isLast){
+      // Outer glow ring
+      html+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="8" fill="rgba(200,242,48,0.15)"/>`;
+      html+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5" fill="#c8f230"/>`;
+      // Value label
+      const lx=pt.x+60>W?pt.x-8:pt.x+8;
+      const anchor=pt.x+60>W?'end':'start';
+      html+=`<text x="${lx.toFixed(1)}" y="${(pt.y-9).toFixed(1)}" fill="#c8f230" font-size="11" font-family="system-ui" font-weight="700" text-anchor="${anchor}">${pt.v.toFixed(1)} kg</text>`;
+    } else if(pts.length<=1){
+      html+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="6" fill="rgba(200,242,48,0.15)"/>`;
+      html+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="4" fill="#c8f230"/>`;
+      html+=`<text x="${(pt.x+10).toFixed(1)}" y="${(pt.y-8).toFixed(1)}" fill="#c8f230" font-size="11" font-family="system-ui" font-weight="700">${pt.v.toFixed(1)} kg</text>`;
+    } else {
+      html+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="2.5" fill="rgba(200,242,48,0.5)"/>`;
+    }
   });
 
-  // Update SVG inner content
-  // Keep defs, replace g-dg content
+  // Update SVG
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   const gdg=document.getElementById(id+'-dg');
   const gap=document.getElementById(id+'-ap');
   const glp=document.getElementById(id+'-lp');
-  const gml=document.getElementById('g-meta-line');
-  const gmla=document.getElementById('g-meta-label');
-  const gmd=document.getElementById('g-meta-dot');
-  const gmdt=document.getElementById('g-meta-date');
-  // Hide old elements
+  ['g-meta-line','g-meta-label','g-meta-dot','g-meta-date'].forEach(eid=>{
+    const el=document.getElementById(eid);if(el)el.style.display='none';
+  });
   if(gap)gap.setAttribute('d','');
   if(glp)glp.setAttribute('d','');
-  if(gml)gml.style.display='none';
-  if(gmla)gmla.style.display='none';
-  if(gmd)gmd.style.display='none';
-  if(gmdt)gmdt.style.display='none';
-
-  // Use gdg to hold all our custom SVG
-  if(gdg)gdg.innerHTML=svgHTML;
-
-  // Clear xl (we put dates inside SVG now)
-  if(xl)xl.innerHTML='';
+  if(gdg)gdg.innerHTML=html;
 
   // Delta
-  if(pesos.length>=2){
-    const ini=pesos[0].v,fin=pesos[pesos.length-1].v,diff=ini-fin;
-    if(dtEl){dtEl.textContent=(diff>0?'−':'+')+Math.abs(diff).toFixed(1)+' kg';dtEl.style.color=diff>0?'#c8f230':'#ff5068';}
-    if(rnEl){
-      const d1=new Date(pesos[0].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
-      const d2=new Date(pesos[pesos.length-1].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
-      rnEl.textContent=d1+' → '+d2+' · '+pesos.length+' registros';
+  const ini=pesos[0].v,fin=pesos[pesos.length-1].v,diff=ini-fin;
+  if(dtEl){dtEl.textContent=(diff>=0?'−':'+') +Math.abs(diff).toFixed(1)+' kg';dtEl.style.color=diff>=0?'#c8f230':'#ff5068';}
+  if(rnEl){
+    if(pesos.length===1){rnEl.textContent='Día 1 · agrega más registros';}
+    else{
+      const totalDias=Math.round((new Date(pesos[pesos.length-1].f)-new Date(pesos[0].f))/(1000*60*60*24));
+      rnEl.textContent=`${pesos.length} registros · ${totalDias} días de seguimiento`;
     }
-  } else {
-    if(dtEl)dtEl.textContent='+0.0 kg';
-    if(rnEl)rnEl.textContent=new Date(pesos[0].f).toLocaleDateString('es-CO',{day:'2-digit',month:'long'})+' · 1 registro';
   }
 }
 
