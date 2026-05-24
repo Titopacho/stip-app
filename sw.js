@@ -1,30 +1,19 @@
-const CACHE='stip-v1';
-const ASSETS=['/','index.html','/manifest.json'];
+const CACHE='stip-v2';
 
-self.addEventListener('install',e=>{
-  e.waitUntil(
-    caches.open(CACHE).then(c=>c.addAll(ASSETS))
-  );
+self.addEventListener('install', e=>{
   self.skipWaiting();
 });
 
-self.addEventListener('activate',e=>{
+self.addEventListener('activate', e=>{
   e.waitUntil(
     caches.keys().then(keys=>Promise.all(
-      keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))
+      keys.map(k=>caches.delete(k))
     ))
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch',e=>{
-  if(e.request.url.includes('firebasejs')||
-     e.request.url.includes('googleapis')||
-     e.request.url.includes('generativelanguage')||
-     e.request.url.includes('tabler')){
-    return fetch(e.request);
-  }
-  e.respondWith(
-    caches.match(e.request).then(r=>r||fetch(e.request))
-  );
+self.addEventListener('fetch', e=>{
+  // Pass through all requests
+  e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
 });
