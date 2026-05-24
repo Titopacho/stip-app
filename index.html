@@ -485,7 +485,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
   <div class="ia-overlay" id="ia-overlay" style="display:none"></div>
 
   <!-- SCAN OVERLAY -->
-  <div class="scan-overlay" id="scan-overlay">
+  <div class="scan-overlay" id="scan-overlay" style="display:none">
     <div style="font-size:13px;color:#c8f230;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Analizando comida</div>
     <div class="scan-box" id="scan-box">
       <img id="scan-img-preview" class="scan-img" src="" alt="">
@@ -640,7 +640,11 @@ function initUI(){
   const dias=['L','M','X','J','V','S','D'],row=document.getElementById('streak-row');
   row.innerHTML='';const hoy=new Date().getDay();
   dias.forEach((d,i)=>{const di=(i+1)%7,done=di<hoy&&i<5,esHoy=di===hoy;const div=document.createElement('div');div.className='sd';div.innerHTML=`<div class="dot${done?' done':''}${esHoy?' today':''}">${done?'✓':d}</div><div class="dlbl">${d}</div>`;row.appendChild(div);});
-  updateHome();drawG('g');renderComidas();renderDeficit();calcularFechaEstimada();if(S.metaPeso)document.getElementById('meta-peso-inp').value=S.metaPeso;
+  updateHome();drawG('g');renderComidas();renderDeficit();
+  calcularFechaEstimada();
+  // Sync meta display
+  const kgDisp=document.getElementById('meta-kg-display');
+  if(kgDisp&&S.metaPeso)kgDisp.textContent=S.metaPeso;
 }
 
 function updateHome(){document.getElementById('h-racha').textContent=S.racha;document.getElementById('h-pts').textContent=S.pts;document.getElementById('h-metas').textContent=S.metas.length;if(S.pesos&&S.pesos.length)document.getElementById('h-peso').textContent=S.pesos[S.pesos.length-1].v.toFixed(1);}
