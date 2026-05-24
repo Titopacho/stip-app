@@ -692,125 +692,195 @@ window.regPeso=async function(){
 
 function drawG(id){
   const pesos=S.pesos||[];
-  const svg=document.getElementById(id+'-svg'),empty=document.getElementById(id+'-empty'),xl=document.getElementById(id+'-xl');
-  const ap=document.getElementById(id+'-ap'),lp=document.getElementById(id+'-lp'),dg=document.getElementById(id+'-dg');
-  const dtEl=document.getElementById(id==='g'?'g-delta':'p-delta'),rnEl=document.getElementById(id==='g'?'g-rango':'p-rango');
-  if(pesos.length<2){svg.style.display='none';if(empty)empty.style.display='flex';if(xl)xl.innerHTML='';if(dtEl)dtEl.textContent='— kg';if(rnEl)rnEl.textContent=pesos.length===1?'1 registro, agrega más':'Registra tu peso diario';return;}
-  svg.style.display='block';if(empty)empty.style.display='none';
-  const W=330,H=130,pad=10,vals=pesos.map(p=>p.v),minV=Math.min(...vals),maxV=Math.max(...vals),range=maxV-minV||1;
-  const pts=pesos.map((p,i)=>[pad+(i/(pesos.length-1))*(W-pad*2),pad+(1-(p.v-minV)/range)*(H-pad*2)]);
-  const ls=pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L');
-  ap.setAttribute('d','M'+ls+' L'+pts[pts.length-1][0].toFixed(1)+','+(H-2)+' L'+pts[0][0].toFixed(1)+','+(H-2)+' Z');
-  lp.setAttribute('d','M'+ls);dg.innerHTML='';
-  pts.forEach((pt,i)=>{const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',pt[0].toFixed(1));c.setAttribute('cy',pt[1].toFixed(1));c.setAttribute('r',i===0||i===pesos.length-1?4:2);c.setAttribute('fill',i===pesos.length-1?'#c8f230':i===0?'#5a6a70':'rgba(200,242,48,0.5)');dg.appendChild(c);});
+  const svg=document.getElementById(id+'-svg');
+  const empty=document.getElementById(id+'-empty');
+  const xl=document.getElementById(id+'-xl');
+  const ap=document.getElementById(id+'-ap');
+  const lp=document.getElementById(id+'-lp');
+  const dg=document.getElementById(id+'-dg');
+  const dtEl=document.getElementById(id==='g'?'g-delta':'p-delta');
+  const rnEl=document.getElementById(id==='g'?'g-rango':'p-rango');
+  const metaPeso=id==='g'?S.metaPeso:null;
+
+  // Need at least 1 peso to show anything
+  if(!pesos.length){
+    if(svg)svg.style.display='none';
+    if(empty)empty.style.display='flex';
+    if(xl)xl.innerHTML='';
+    if(dtEl)dtEl.textContent='— kg';
+    if(rnEl)rnEl.textContent='Registra tu primer peso';
+    return;
+  }
+
+  if(svg)svg.style.display='block';
+  if(empty)empty.style.display='none';
+
+  const W=330,H=130,pad=14;
+
+  // --- Calculate Y range with 5kg margin ---
+  const vals=pesos.map(p=>p.v);
+  let minV=Math.min(...vals);
+  let maxV=Math.max(...vals);
+  if(metaPeso&&metaPeso<minV)minV=metaPeso;
+  if(metaPeso&&metaPeso>maxV)maxV=metaPeso;
+  // Add 5kg margin top and bottom
+  minV=minV-5;
+  maxV=maxV+5;
+  const range=maxV-minV||10;
+
+  function toY(v){return pad+(1-(v-minV)/range)*(H-pad*2);}
+
+  // --- Draw weight line/points ---
+  // X positions: if only 1 point, put it at 30% from left
+  // if meta exists, weight points go left side, meta point goes right
+  const hasMetaPoint=metaPeso&&pesos.length>=1;
+  const totalXPoints=hasMetaPoint?pesos.length+1:pesos.length;
+
+  let pts;
+  if(pesos.length===1&&hasMetaPoint){
+    // Single weight point at 20%, meta point at 80%
+    pts=[{x:W*0.20,y:toY(pesos[0].v),v:pesos[0].v,isWeight:true,idx:0}];
+  } else {
+    pts=pesos.map((p,i)=>({
+      x:pad+(i/(Math.max(pesos.length-1,1)))*(W*0.75-pad),
+      y:toY(p.v),v:p.v,isWeight:true,idx:i
+    }));
+  }
+
+  // Draw area fill only if 2+ points
+  if(pesos.length>=2){
+    const ls=pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' L');
+    if(ap)ap.setAttribute('d','M'+ls+' L'+pts[pts.length-1].x.toFixed(1)+','+(H-pad/2)+' L'+pts[0].x.toFixed(1)+','+(H-pad/2)+' Z');
+    if(lp)lp.setAttribute('d','M'+ls);
+  } else {
+    if(ap)ap.setAttribute('d','');
+    if(lp)lp.setAttribute('d','');
+  }
+
+  // Draw dots
+  if(dg)dg.innerHTML='';
+  pts.forEach((pt,i)=>{
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',pt.x.toFixed(1));
+    c.setAttribute('cy',pt.y.toFixed(1));
+    c.setAttribute('r',i===pts.length-1?5:3);
+    c.setAttribute('fill',i===pts.length-1?'#c8f230':'rgba(200,242,48,0.6)');
+    if(dg)dg.appendChild(c);
+    // Label for single point
+    if(pesos.length===1){
+      const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x',(pt.x+8).toFixed(1));
+      t.setAttribute('y',(pt.y-6).toFixed(1));
+      t.setAttribute('fill','#c8f230');
+      t.setAttribute('font-size','10');
+      t.setAttribute('font-family','system-ui');
+      t.setAttribute('font-weight','700');
+      t.textContent=pt.v.toFixed(1)+' kg';
+      if(dg)dg.appendChild(t);
+    }
+  });
+
+  // --- Draw META line and point ---
+  const metaLine=document.getElementById('g-meta-line');
+  const metaLabel=document.getElementById('g-meta-label');
+  const metaDot=document.getElementById('g-meta-dot');
+  const metaDate=document.getElementById('g-meta-date');
+
+  if(metaPeso&&id==='g'){
+    const metaY=toY(metaPeso);
+    const metaX=pesos.length===1?W*0.80:W-pad;
+
+    // Horizontal dashed line from last weight point to meta point
+    const lastPt=pts[pts.length-1];
+    if(metaLine){
+      metaLine.setAttribute('x1',lastPt.x.toFixed(1));
+      metaLine.setAttribute('y1',lastPt.y.toFixed(1));
+      metaLine.setAttribute('x2',metaX.toFixed(1));
+      metaLine.setAttribute('y2',metaY.toFixed(1));
+      metaLine.style.display='';
+      metaLine.setAttribute('stroke','#ffbe4a');
+      metaLine.setAttribute('stroke-dasharray','5,4');
+      metaLine.setAttribute('stroke-width','1.5');
+    }
+    // Meta dot
+    if(metaDot){
+      metaDot.setAttribute('cx',metaX.toFixed(1));
+      metaDot.setAttribute('cy',metaY.toFixed(1));
+      metaDot.setAttribute('r','5');
+      metaDot.style.display='';
+    }
+    // Meta label
+    if(metaLabel){
+      metaLabel.setAttribute('x',(metaX-28).toFixed(1));
+      metaLabel.setAttribute('y',(metaY-8).toFixed(1));
+      metaLabel.textContent=metaPeso+' kg';
+      metaLabel.style.display='';
+    }
+    // Meta date label below dot
+    if(metaDate){
+      // Get estimated days
+      const diasEl=document.getElementById('meta-dias-display');
+      const diasTxt=diasEl?diasEl.textContent.replace(' días','').replace('· ','').trim():'';
+      const dias=parseInt(diasTxt)||0;
+      if(dias>0){
+        const fecha=new Date();
+        fecha.setDate(fecha.getDate()+dias);
+        const mes=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][fecha.getMonth()];
+        metaDate.setAttribute('x',(metaX-22).toFixed(1));
+        metaDate.setAttribute('y',(metaY+16).toFixed(1));
+        metaDate.textContent=fecha.getDate()+' '+mes;
+        metaDate.style.display='';
+      } else {
+        metaDate.style.display='none';
+      }
+    }
+  } else {
+    if(metaLine)metaLine.style.display='none';
+    if(metaLabel)metaLabel.style.display='none';
+    if(metaDot)metaDot.style.display='none';
+    if(metaDate)metaDate.style.display='none';
+  }
+
+  // --- Delta and range labels ---
   const ini=pesos[0].v,fin=pesos[pesos.length-1].v,diff=ini-fin;
   if(dtEl){dtEl.textContent=(diff>0?'−':'+')+Math.abs(diff).toFixed(1)+' kg';dtEl.style.color=diff>0?'#c8f230':'#ff5068';}
-  if(rnEl){const d1=new Date(pesos[0].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'}),d2=new Date(pesos[pesos.length-1].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});rnEl.textContent=d1+' → '+d2+' · '+pesos.length+' registros';}
-  if(xl){xl.innerHTML='';[0,Math.floor(pesos.length/2),pesos.length-1].filter((v,i,a)=>a.indexOf(v)===i).forEach(i=>{const s=document.createElement('span');s.textContent=new Date(pesos[i].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});s.style.left=((pad+(i/(pesos.length-1))*(W-pad*2))/W*100).toFixed(1)+'%';xl.appendChild(s);});}
-  // Draw meta line if set and in range
-  if(id==='g'){
-    const metaLine=document.getElementById('g-meta-line');
-    const metaLabel=document.getElementById('g-meta-label');
-    if(metaLine&&metaLabel&&S.metaPeso){
-      const minV2=Math.min(...pesos.map(p=>p.v),S.metaPeso);
-      const maxV2=Math.max(...pesos.map(p=>p.v));
-      const range2=maxV2-minV2||1;
-      const metaY=pad+(1-(S.metaPeso-minV2)/range2)*(H-pad*2);
-      if(metaY>pad+4&&metaY<H-4){
-        metaLine.setAttribute('y1',metaY.toFixed(1));
-        metaLine.setAttribute('y2',metaY.toFixed(1));
-        metaLabel.setAttribute('y',(metaY-3).toFixed(1));
-        metaLabel.textContent='meta: '+S.metaPeso+' kg';
-        metaLine.style.display='';
-        metaLabel.style.display='';
-      } else {
-        metaLine.style.display='none';
-        metaLabel.style.display='none';
+  if(rnEl){
+    if(pesos.length===1){
+      rnEl.textContent=new Date(pesos[0].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'})+' · 1 registro';
+    } else {
+      const d1=new Date(pesos[0].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
+      const d2=new Date(pesos[pesos.length-1].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
+      rnEl.textContent=d1+' → '+d2+' · '+pesos.length+' registros';
+    }
+  }
+
+  // --- X labels ---
+  if(xl){
+    xl.innerHTML='';
+    const showIdxs=pesos.length===1?[0]:[0,Math.floor(pesos.length/2),pesos.length-1].filter((v,i,a)=>a.indexOf(v)===i);
+    showIdxs.forEach(i=>{
+      const s=document.createElement('span');
+      s.textContent=new Date(pesos[i].f).toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
+      const xPct=pesos.length===1?20:((pad+(i/(Math.max(pesos.length-1,1)))*(W*0.75-pad))/W*100);
+      s.style.left=xPct.toFixed(1)+'%';
+      xl.appendChild(s);
+    });
+    // Meta date in x labels
+    if(metaPeso&&id==='g'){
+      const diasEl=document.getElementById('meta-dias-display');
+      const diasTxt=diasEl?diasEl.textContent.replace(' días','').replace('· ','').trim():'';
+      const dias=parseInt(diasTxt)||0;
+      if(dias>0){
+        const s=document.createElement('span');
+        const fecha=new Date();fecha.setDate(fecha.getDate()+dias);
+        s.textContent='🎯 '+fecha.toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
+        s.style.left=(pesos.length===1?80:90)+'%';
+        s.style.color='#ffbe4a';
+        s.style.fontWeight='700';
+        xl.appendChild(s);
       }
-      // Recalc chart with extended range to show meta line
-      const pts2=pesos.map((p,i)=>[pad+(i/(pesos.length-1))*(W-pad*2),pad+(1-(p.v-minV2)/range2)*(H-pad*2)]);
-      const ls2=pts2.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L');
-      document.getElementById('g-ap').setAttribute('d','M'+ls2+' L'+pts2[pts2.length-1][0].toFixed(1)+','+(H-2)+' L'+pts2[0][0].toFixed(1)+','+(H-2)+' Z');
-      document.getElementById('g-lp').setAttribute('d','M'+ls2);
-      document.getElementById('g-dg').innerHTML='';
-      pts2.forEach((pt,i)=>{const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',pt[0].toFixed(1));c.setAttribute('cy',pt[1].toFixed(1));c.setAttribute('r',i===0||i===pesos.length-1?4:2);c.setAttribute('fill',i===pesos.length-1?'#c8f230':i===0?'#5a6a70':'rgba(200,242,48,0.5)');document.getElementById('g-dg').appendChild(c);});
-    } else if(metaLine){metaLine.style.display='none';metaLabel.style.display='none';}
+    }
   }
-}
-
-function calcEdad(nacimiento){
-  if(!nacimiento)return 0;
-  const hoy=new Date(),nac=new Date(nacimiento);
-  let edad=hoy.getFullYear()-nac.getFullYear();
-  const m=hoy.getMonth()-nac.getMonth();
-  if(m<0||(m===0&&hoy.getDate()<nac.getDate()))edad--;
-  return edad;
-}
-
-window.previewEdad=function(){
-  const nac=document.getElementById('c-nacimiento').value;
-  if(!nac)return;
-  const edad=calcEdad(nac);
-  if(edad>0&&edad<120){
-    document.getElementById('edad-calc').textContent=edad;
-    document.getElementById('edad-preview').style.display='block';
-  }
-};
-
-window.guardarPerfil=async function(){
-  const nacimiento=document.getElementById('c-nacimiento').value;
-  const alt=parseFloat(document.getElementById('c-alt').value);
-  const sexo=document.getElementById('c-sexo').value;
-  const activ=parseFloat(document.getElementById('c-activ').value);
-  const obj=document.getElementById('c-obj').value;
-  if(!nacimiento||!alt){toast('Completa fecha de nacimiento y estatura','#ff5068');return;}
-  const edad=calcEdad(nacimiento);
-  if(edad<10||edad>100){toast('Fecha de nacimiento inválida','#ff5068');return;}
-  S.perfil={nacimiento,alt,sexo,activ,obj};
-  await guardar();
-  mostrarPerfil();
-  calcCals();
-  toast('¡Perfil guardado y calorías calculadas! ✅');
-};
-
-window.editarPerfil=function(){
-  const resumen=document.getElementById('perfil-resumen');
-  const form=document.getElementById('perfil-form');
-  if(resumen)resumen.style.display='none';
-  if(form)form.style.display='block';
-  if(S.perfil){
-    const nac=document.getElementById('c-nacimiento');
-    const alt=document.getElementById('c-alt');
-    const sexo=document.getElementById('c-sexo');
-    const activ=document.getElementById('c-activ');
-    const obj=document.getElementById('c-obj');
-    if(nac)nac.value=S.perfil.nacimiento||'';
-    if(alt)alt.value=S.perfil.alt||'';
-    if(sexo)sexo.value=S.perfil.sexo||'h';
-    if(activ)activ.value=S.perfil.activ||1.55;
-    if(obj)obj.value=S.perfil.obj||'deficit';
-    window.previewEdad();
-  }
-};
-
-function mostrarPerfil(){
-  if(!S.perfil)return;
-  const edad=calcEdad(S.perfil.nacimiento);
-  const activLabels={1.2:'Sedentario',1.375:'Ligero',1.55:'Moderado',1.725:'Activo',1.9:'Muy activo'};
-  // Show summary, hide form
-  const resumen=document.getElementById('perfil-resumen');
-  const form=document.getElementById('perfil-form');
-  if(resumen)resumen.style.display='block';
-  if(form)form.style.display='none';
-  // Fill summary
-  const edEl=document.getElementById('p-edad-display');
-  const alEl=document.getElementById('p-alt-display');
-  const sxEl=document.getElementById('p-sexo-display');
-  const acEl=document.getElementById('p-activ-display');
-  if(edEl)edEl.textContent=edad;
-  if(alEl)alEl.textContent=S.perfil.alt;
-  if(sxEl)sxEl.textContent=S.perfil.sexo==='h'?'♂ Hombre':'♀ Mujer';
-  if(acEl)acEl.textContent=activLabels[S.perfil.activ]||'Moderado';
 }
 
 window.calcCals=function(){
@@ -1018,9 +1088,7 @@ function calcularFechaEstimada(){
     const kgDisp=document.getElementById('meta-kg-display');
     if(kgDisp)kgDisp.textContent='—';
     const dd2=document.getElementById('meta-dias-display');
-  const dl2=document.getElementById('meta-dias-lbl');
   if(dd2)dd2.textContent='';
-  if(dl2)dl2.textContent='';
     document.getElementById('meta-fecha-estimada').style.display='none';
     return;
   }
@@ -1033,9 +1101,7 @@ function calcularFechaEstimada(){
     const kgDisp2=document.getElementById('meta-kg-display');
     if(kgDisp2)kgDisp2.textContent=metaPeso;
     const dd3=document.getElementById('meta-dias-display');
-  const dl3=document.getElementById('meta-dias-lbl');
-  if(dd3)dd3.textContent='🏆';
-  if(dl3)dl3.textContent='¡Logrado!';
+  if(dd3)dd3.textContent='🏆 ¡Logrado!';
     document.getElementById('meta-fecha-estimada').style.display='none';
     return;
   }
@@ -1103,7 +1169,7 @@ function calcularFechaEstimada(){
   const ddEl=document.getElementById('meta-dias-display');
   const dlEl=document.getElementById('meta-dias-lbl');
   if(ddEl)ddEl.textContent=diasEstimados;
-  if(dlEl)dlEl.textContent='días';
+  if(ddEl)ddEl.textContent=diasEstimados+' días';
   document.getElementById('meta-fecha-estimada').style.display='block';
   document.getElementById('meta-fecha-texto').textContent=fechaStr;
 
@@ -1352,9 +1418,40 @@ window.guardarMetaRapida=async function(i){
   abrirMetasRapidas(); // refresh the list
 };
 
+function programarRecordatorioMeta(nombre,hora){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const[h,m]=hora.split(':').map(Number);
+  const ahora=new Date();
+  const target=new Date();
+  target.setHours(h,m,0,0);
+  if(target<=ahora)target.setDate(target.getDate()+1);
+  const ms=target-ahora;
+  const t=setTimeout(()=>{
+    new Notification('🎯 Stip — '+nombre,{body:'¿Tienes avance en esta meta hoy? Actualiza tu progreso 💪',icon:'/icon-192.png'});
+    programarRecordatorioMeta(nombre,hora);
+  },ms);
+  if(!window._notifTimers)window._notifTimers=[];
+  window._notifTimers.push(t);
+}
+
+window.toggleRecMeta=async function(i){
+  const m=S.metas[i];
+  m.recOn=!m.recOn;
+  if(m.recOn&&Notification.permission!=='granted'){
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){m.recOn=false;toast('Activa permisos de notificación en Configuración','#ff5068');return;}
+  }
+  if(m.recOn)programarRecordatorioMeta(m.n,m.recHora||'08:00');
+  await guardar();renderMetas();
+  toast(m.recOn?'🔔 Recordatorio activado':'🔕 Recordatorio desactivado');
+};
+
 // Init notifications on app load
 setTimeout(()=>{
   if(S.notifCfg&&Notification.permission==='granted')programarNotificaciones();
+  if(S.metas&&Notification.permission==='granted'){
+    S.metas.filter(m=>m.recOn).forEach(m=>programarRecordatorioMeta(m.n,m.recHora||'08:00'));
+  }
   actualizarStatusNotif();
 },1000);
 </script>
