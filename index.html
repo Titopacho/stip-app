@@ -264,30 +264,29 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
           </svg>
         </div>
         <div class="xlbls" id="g-xl"></div>
-      </div>
-      <!-- META DE PESO -->
-      <div style="background:#1a1d1f;border:1px solid #2e3336;border-radius:12px;padding:14px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <!-- META INPUT inline -->
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #2e3336">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div>
-            <div style="font-size:13px;font-weight:700;color:#f4f4f4">🎯 Mi meta de peso</div>
-            <div style="font-size:11px;color:#8c96a0;margin-top:2px" id="meta-estimado">Establece tu meta para ver la fecha estimada</div>
+            <div style="font-size:12px;font-weight:700;color:#ffbe4a">🎯 Meta de peso</div>
+            <div style="font-size:11px;color:#8c96a0;margin-top:2px" id="meta-estimado">Establece tu meta para verla en la gráfica</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:20px;font-weight:800;color:#ffbe4a" id="meta-dias-display">— días</div>
-            <div style="font-size:10px;color:#8c96a0">para llegar</div>
+            <div style="font-size:18px;font-weight:800;color:#ffbe4a" id="meta-dias-display"></div>
+            <div style="font-size:10px;color:#8c96a0" id="meta-dias-lbl"></div>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <input class="inp" type="number" id="meta-peso-inp" placeholder="ej: 70 kg" step="0.1" style="margin-bottom:0;flex:1">
-          <button onclick="guardarMetaPeso()" style="padding:0 16px;height:44px;border-radius:8px;background:#ffbe4a;color:#111;font-size:13px;font-weight:800;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0">Establecer</button>
+          <button onclick="guardarMetaPeso()" style="padding:0 14px;height:44px;border-radius:8px;background:#ffbe4a;color:#111;font-size:13px;font-weight:800;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0">📍 Establecer</button>
         </div>
-        <div id="meta-fecha-estimada" style="display:none;margin-top:10px;background:#222629;border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:12px;color:#8c96a0;margin-bottom:4px">Fecha estimada de llegada</div>
-          <div style="font-size:16px;font-weight:700;color:#ffbe4a" id="meta-fecha-texto">—</div>
+        <div id="meta-fecha-estimada" style="display:none;margin-top:8px;background:#222629;border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:11px;color:#8c96a0;margin-bottom:3px">Fecha estimada de llegada</div>
+          <div style="font-size:15px;font-weight:700;color:#ffbe4a" id="meta-fecha-texto">—</div>
           <div style="font-size:11px;color:#8c96a0;margin-top:4px" id="meta-deficit-info">—</div>
         </div>
       </div>
-
+      </div>
       <p class="sec">Registrar peso de hoy</p>
       <div class="card">
         <div class="row" style="margin-bottom:8px">
@@ -946,7 +945,8 @@ function calcularFechaEstimada(){
 
   if(!metaPeso||!pesos.length){
     document.getElementById('meta-estimado').textContent='Registra tu peso y establece tu meta';
-    document.getElementById('meta-dias-display').textContent='— días';
+    document.getElementById('meta-dias-display').textContent='';
+  document.getElementById('meta-dias-lbl').textContent='';
     document.getElementById('meta-fecha-estimada').style.display='none';
     return;
   }
@@ -956,7 +956,8 @@ function calcularFechaEstimada(){
 
   if(kgFaltantes<=0){
     document.getElementById('meta-estimado').textContent='¡Ya alcanzaste tu meta! 🎉';
-    document.getElementById('meta-dias-display').textContent='¡Listo! 🏆';
+    document.getElementById('meta-dias-display').textContent='🏆';
+  document.getElementById('meta-dias-lbl').textContent='¡Meta alcanzada!';
     document.getElementById('meta-fecha-estimada').style.display='none';
     return;
   }
@@ -1019,7 +1020,8 @@ function calcularFechaEstimada(){
   const diasAhorrados=diasPlan-diasEstimados;
 
   document.getElementById('meta-estimado').textContent=`Faltan ${kgFaltantes.toFixed(1)} kg · Meta: ${metaPeso} kg`;
-  document.getElementById('meta-dias-display').textContent=diasEstimados+' días';
+  document.getElementById('meta-dias-display').textContent=diasEstimados;
+  document.getElementById('meta-dias-lbl').textContent='días para llegar';
   document.getElementById('meta-fecha-estimada').style.display='block';
   document.getElementById('meta-fecha-texto').textContent=fechaStr;
 
