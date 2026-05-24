@@ -923,21 +923,30 @@ async function analizarConGemini(b64,mime){
     return;
   }
   try{
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        contents:[{parts:[
-          {inline_data:{mime_type:mime||'image/jpeg',data:b64}},
-          {text:'Analiza esta imagen de comida. Responde SOLO en JSON sin markdown:\n{"nombre":"nombre del plato en español","calorias":numero_entero,"proteinas":numero_entero,"carbohidratos":numero_entero,"grasas":numero_entero,"descripcion":"alimentos detectados en 1 linea","consejo":"consejo nutricional breve"}'}
-        ]}],
-        generationConfig:{temperature:0.1,maxOutputTokens:400}
-      })
-    });
-    const data=await resp.json();
-    if(data.error)throw new Error(data.error.message);
-    const txt=data.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
-    const p=JSON.parse(txt);
+    const models=['gemini-3.1-flash-lite','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-1.5-flash'];
+    let p=null;
+    let lastErr='';
+    for(const model of models){
+      try{
+        const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            contents:[{parts:[
+              {inline_data:{mime_type:mime||'image/jpeg',data:b64}},
+              {text:'Analiza esta imagen de comida. Responde SOLO en JSON sin markdown:\n{"nombre":"nombre del plato en español","calorias":numero_entero,"proteinas":numero_entero,"carbohidratos":numero_entero,"grasas":numero_entero,"descripcion":"alimentos detectados en 1 linea","consejo":"consejo nutricional breve"}'}
+            ]}],
+            generationConfig:{temperature:0.1,maxOutputTokens:400}
+          })
+        });
+        const data=await resp.json();
+        if(data.error){lastErr=data.error.message;continue;}
+        const txt=data.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
+        p=JSON.parse(txt);
+        break;
+      }catch(e){lastErr=e.message;continue;}
+    }
+    if(!p)throw new Error(lastErr||'No se pudo analizar');
     document.getElementById('ia-overlay').style.display='none';
     document.getElementById('f-nombre').value=p.nombre||'';
     document.getElementById('f-cal').value=p.calorias||'';
@@ -1068,7 +1077,10 @@ function renderMetas(){
 window.abrirUpd=function(i){updI=i;const m=(S.metas||[])[i];document.getElementById('upd-t').textContent=m.n;document.getElementById('upd-s').textContent=`Actual: ${m.actual} ${m.uni} → Objetivo: ${m.meta} ${m.uni}`;document.getElementById('upd-v').value='';document.getElementById('mod-upd').classList.add('open');};
 window.guardarUpd=async function(){const v=parseFloat(document.getElementById('upd-v').value);if(isNaN(v)){toast('Ingresa un valor','#ff5068');return;}const m=S.metas[updI];m.actual=v;const p=pct(m);if(p>=100){S.pts=(S.pts||0)+50;toast('🎉 META COMPLETADA +50 pts');}else{S.pts=(S.pts||0)+10;toast('Actualizado +10 pts 📈');}await guardar();cerrarMod('mod-upd');updateHome();renderMetas();};
 window.delMeta=async function(i){S.metas.splice(i,1);await guardar();updateHome();renderMetas();toast('Meta eliminada');};
-window.cerrarMod=function(id){document.getElementById(id).classList.remove('open');};
+window.cerrarMod=function(id){
+  const el=document.getElementById(id);
+  if(el){el.classList.remove('open');el.style.display='';}
+};
 
 function renderProg(){
   const pesos=S.pesos||[];
@@ -1391,11 +1403,14 @@ function programarRecordatorioMeta(nombre,hora){
 window.abrirNotifMeta=function(i){
   window._editNotifIdx=i;
   const m=S.metas[i];
-  document.getElementById('notif-meta-titulo').textContent='🔔 '+m.n;
-  document.getElementById('notif-meta-sub').textContent='Recordatorio diario para actualizar tu progreso';
-  document.getElementById('edit-rec-on').checked=m.recOn||false;
-  document.getElementById('edit-rec-hora').value=m.recHora||'08:00';
-  document.getElementById('mod-meta-notif').classList.add('open');
+  const titulo=document.getElementById('notif-meta-titulo');
+  const recOn=document.getElementById('edit-rec-on');
+  const recHora=document.getElementById('edit-rec-hora');
+  const modal=document.getElementById('mod-meta-notif');
+  if(titulo)titulo.textContent='🔔 '+m.n;
+  if(recOn)recOn.checked=m.recOn||false;
+  if(recHora)recHora.value=m.recHora||'08:00';
+  if(modal){modal.classList.add('open');modal.style.display='flex';}
 };
 
 window.guardarNotifMeta=async function(){
