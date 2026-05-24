@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.titopacho.twa",
+        "sha256_cert_fingerprints": ["33:F1:75:13:49:B9:51:18:88:D1:0F:AC:9F:61:03:88:C0:0D:65:A1:01:78:DA:2E:57:FF:64:CD:00:98:9E:78"]
+      }
+    }]
