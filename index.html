@@ -521,7 +521,7 @@ const CAT_ICONS={salud:'ti-heartbeat',estudio:'ti-book',habito:'ti-repeat',perso
 const CAT_LABEL={salud:'Salud',estudio:'Estudio',habito:'Hábito',personal:'Personal'};
 const DB=[{n:'Arroz blanco (1 taza)',k:206},{n:'Arroz con pollo',k:420},{n:'Bandeja paisa',k:1100},{n:'Ajiaco bogotano',k:350},{n:'Sancocho de pollo',k:280},{n:'Frijoles (1 taza)',k:230},{n:'Lentejas (1 taza)',k:230},{n:'Papa cocida',k:130},{n:'Papa frita',k:365},{n:'Plátano maduro frito',k:180},{n:'Patacón',k:130},{n:'Arepa de maíz',k:160},{n:'Arepa con queso',k:220},{n:'Pan blanco (1 tajada)',k:80},{n:'Huevo frito',k:90},{n:'Huevo revuelto (2)',k:180},{n:'Pechuga de pollo (150g)',k:165},{n:'Muslo de pollo',k:210},{n:'Carne molida (100g)',k:215},{n:'Bistec de res (150g)',k:280},{n:'Tilapia (150g)',k:160},{n:'Salmón (150g)',k:280},{n:'Atún en lata',k:120},{n:'Ensalada mixta',k:40},{n:'Ensalada con pollo',k:220},{n:'Aguacate (½)',k:120},{n:'Banano',k:90},{n:'Manzana',k:80},{n:'Naranja',k:60},{n:'Mango',k:135},{n:'Papaya (1 taza)',k:55},{n:'Leche entera (1 vaso)',k:150},{n:'Leche descremada',k:90},{n:'Yogur natural',k:140},{n:'Queso campesino (50g)',k:150},{n:'Chocolate caliente',k:160},{n:'Café negro',k:5},{n:'Café con leche',k:80},{n:'Jugo naranja natural',k:110},{n:'Agua panela con limón',k:90},{n:'Gaseosa (1 vaso)',k:130},{n:'Almuerzo ejecutivo',k:750},{n:'Empanada de pipián',k:180},{n:'Tamale bogotano',k:420},{n:'Changua',k:180},{n:'Caldo de costilla',k:220},{n:'Buñuelo',k:200},{n:'Pandebono',k:190},{n:'Mogolla',k:160},{n:'Pizza (1 porción)',k:285},{n:'Hamburguesa',k:450},{n:'Perro caliente',k:290},{n:'Sopa de verduras',k:120},{n:'Avena con leche',k:290},{n:'Granola (½ taza)',k:200},{n:'Maní (puñado)',k:165},{n:'Almendras (puñado)',k:170},{n:'Pollo asado (150g)',k:220},{n:'Cerdo asado (150g)',k:260},{n:'Chorizo',k:180},{n:'Chicharrón',k:290},{n:'Mondongo',k:320},{n:'Ceviche de camarón',k:180}];
 
-const GEMINI_KEY='AIzaSyCC3tDGKC46i3Eb4AH9Bxben7SrybD1wEg';
+
 let S={pesos:[],metas:[],comidas:[],pts:0,racha:0,metaCal:0,gymExtra:0,fotoB64:null,fotoMime:'image/jpeg'};
 let updI=null,filtroCat='todas',currentUID='';
 
@@ -882,22 +882,34 @@ window.handleFoto=function(e){
 async function analizarConGemini(b64,mime){
   document.getElementById('ia-overlay').classList.add('show');
   try{
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_KEY}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{text:'Analiza esta imagen de comida. Responde SOLO en JSON sin markdown:\n{"nombre":"nombre del plato en español","calorias":número_entero,"proteinas":número_entero,"carbohidratos":número_entero,"grasas":número_entero,"descripcion":"alimentos detectados en 1 línea","consejo":"consejo nutricional breve en español"}'}]}],generationConfig:{temperature:0.1,maxOutputTokens:400}})});
-    const data=await resp.json();if(data.error)throw new Error(data.error.message);
-    const txt=data.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
-    const p=JSON.parse(txt);
+    const resp=await fetch('https://stip-gemini.franciscomenesesm96.workers.dev',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({imageBase64:b64,mimeType:mime||'image/jpeg'})
+    });
+    if(!resp.ok)throw new Error('Error '+resp.status);
+    const p=await resp.json();
+    if(p.error)throw new Error(p.error);
     document.getElementById('ia-overlay').classList.remove('show');
     document.getElementById('f-nombre').value=p.nombre||'';
-      document.getElementById('f-cal').value=p.calorias||0;
-      document.getElementById('f-prot').value=p.proteinas||0;
-      document.getElementById('f-carb').value=p.carbohidratos||0;
-      document.getElementById('f-gras').value=p.grasas||0;
-    document.getElementById('ia-res-area').innerHTML=`<div class="ia-res"><h4>🤖 Gemini detectó: ${p.nombre}</h4><div class="ia-macros"><div class="ia-macro"><div class="v" style="color:#c8f230">${p.calorias}</div><div class="l">kcal</div></div><div class="ia-macro"><div class="v" style="color:#5ab4ff">${p.proteinas}g</div><div class="l">Proteína</div></div><div class="ia-macro"><div class="v" style="color:#ffbe4a">${p.carbohidratos}g</div><div class="l">Carbos</div></div></div><div class="ia-tip">🥑 Grasas: ${p.grasas}g · ${p.descripcion}<br><strong style="color:#c8f230">💡 ${p.consejo}</strong></div></div>`;
-    document.getElementById('up-txt').textContent='Foto analizada ✓';toast('Gemini: ~'+p.calorias+' kcal 🤖');
+    document.getElementById('f-cal').value=p.calorias||'';
+    document.getElementById('f-prot').value=p.proteinas||0;
+    document.getElementById('f-carb').value=p.carbohidratos||0;
+    document.getElementById('f-gras').value=p.grasas||0;
+    document.getElementById('ia-res-area').innerHTML=`<div class="ia-res">
+      <h4>🤖 Gemini detectó: ${p.nombre}</h4>
+      <div class="ia-macros">
+        <div class="ia-macro"><div class="v" style="color:#c8f230">${p.calorias}</div><div class="l">kcal</div></div>
+        <div class="ia-macro"><div class="v" style="color:#5ab4ff">${p.proteinas}g</div><div class="l">Proteína</div></div>
+        <div class="ia-macro"><div class="v" style="color:#ffbe4a">${p.carbohidratos}g</div><div class="l">Carbos</div></div>
+      </div>
+      <div class="ia-tip">🥑 Grasas: ${p.grasas}g · ${p.descripcion}<br><strong style="color:#c8f230">💡 ${p.consejo}</strong></div>
+    </div>`;
+    document.getElementById('up-txt').textContent='Foto analizada ✓';
+    toast('Gemini: ~'+p.calorias+' kcal 🤖');
   }catch(err){
     document.getElementById('ia-overlay').classList.remove('show');
-    const msg=err.message||'Error desconocido';
-    document.getElementById('ia-res-area').innerHTML=`<div style="background:#2a1500;border:1px solid #6b3000;border-radius:8px;padding:12px;margin-bottom:8px"><p style="font-size:12px;color:#ffbe4a">⚠️ No se pudo analizar la foto. Busca el alimento manualmente.</p><p style="font-size:10px;color:#6b3000;margin-top:4px">${msg}</p></div>`;
+    document.getElementById('ia-res-area').innerHTML=`<div style="background:#2a1500;border:1px solid #6b3000;border-radius:8px;padding:12px;margin-bottom:8px"><p style="font-size:12px;color:#ffbe4a">⚠️ Error al analizar — busca el alimento manualmente</p></div>`;
     toast('Busca el alimento manualmente','#ffbe4a');
   }
 }
