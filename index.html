@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#111314">
 <meta name="mobile-web-app-capable" content="yes">
@@ -514,7 +513,6 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getRemoteConfig, fetchAndActivate, getValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCwV4JleSBTPfLrGo0U9wnKzr4bQue32Ic",
@@ -528,9 +526,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const remoteConfig = getRemoteConfig(app);
-remoteConfig.settings = { minimumFetchIntervalMillis: 3600000 };
-remoteConfig.defaultConfig = { GEMINI_KEY: '' };
 const googleProvider = new GoogleAuthProvider();
 
 const FRASES=[["Cada registro que haces es una promesa que te cumples.","Tu yo del futuro"],["No tienes que ser perfecto, solo consistente.","Anónimo"],["El cuerpo logra lo que la mente cree.","Proverbio"],["Seis años intentando no es fracaso. Es experiencia.","Tu historia"],["La disciplina es elegir lo que más quieres sobre lo que quieres ahora.","Lincoln"]];
@@ -596,6 +591,12 @@ async function cargarDatos(uid){
   const snap=await getDoc(ref);
   if(snap.exists()){S={...S,...snap.data()};}
   else{await setDoc(ref,S);}
+  // Load Gemini key from config
+  try{
+    const cfgRef=doc(db,'config','gemini');
+    const cfgSnap=await getDoc(cfgRef);
+    if(cfgSnap.exists())GEMINI_KEY_RC=cfgSnap.data().key||'';
+  }catch(e){console.log('Config load error:',e);}
 }
 
 async function guardar(){
@@ -610,13 +611,7 @@ onAuthStateChanged(auth,async(user)=>{
   if(user){
     currentUID=user.uid;
     await cargarDatos(user.uid);
-    // Fetch Gemini key from Remote Config
-    try {
-      await fetchAndActivate(remoteConfig);
-      GEMINI_KEY_RC = getValue(remoteConfig, 'GEMINI_KEY').asString();
-    } catch(e) {
-      console.log('Remote config error:', e);
-    }
+
     const nombre=user.displayName||user.email.split('@')[0];
     document.getElementById('user-name-hdr').textContent=nombre;
     const av=document.getElementById('user-avatar');
