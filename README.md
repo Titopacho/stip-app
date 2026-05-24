@@ -1,1 +1,1 @@
-# stip-app
+# app-stip
