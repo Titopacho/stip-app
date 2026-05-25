@@ -820,6 +820,74 @@ function drawG(id){
   }
 }
 
+function calcEdad(nacimiento){
+  if(!nacimiento)return 0;
+  const hoy=new Date(),nac=new Date(nacimiento);
+  let edad=hoy.getFullYear()-nac.getFullYear();
+  const m=hoy.getMonth()-nac.getMonth();
+  if(m<0||(m===0&&hoy.getDate()<nac.getDate()))edad--;
+  return edad;
+}
+
+window.previewEdad=function(){
+  const nac=document.getElementById('c-nacimiento').value;
+  if(!nac)return;
+  const edad=calcEdad(nac);
+  if(edad>0&&edad<120){
+    const el=document.getElementById('edad-calc');
+    const pr=document.getElementById('edad-preview');
+    if(el)el.textContent=edad;
+    if(pr)pr.style.display='block';
+  }
+};
+
+window.guardarPerfil=async function(){
+  const nacimiento=document.getElementById('c-nacimiento').value;
+  const alt=parseFloat(document.getElementById('c-alt').value);
+  const sexo=document.getElementById('c-sexo').value;
+  const activ=parseFloat(document.getElementById('c-activ').value);
+  const obj=document.getElementById('c-obj').value;
+  if(!nacimiento||!alt){toast('Completa fecha de nacimiento y estatura','#ff5068');return;}
+  const edad=calcEdad(nacimiento);
+  if(edad<10||edad>100){toast('Fecha de nacimiento inválida','#ff5068');return;}
+  S.perfil={nacimiento,alt,sexo,activ,obj};
+  await guardar();
+  mostrarPerfil();
+  window.calcCals();
+  toast('¡Perfil guardado! ✅');
+};
+
+window.editarPerfil=function(){
+  const resumen=document.getElementById('perfil-resumen');
+  const form=document.getElementById('perfil-form');
+  if(resumen)resumen.style.display='none';
+  if(form)form.style.display='block';
+  if(S.perfil){
+    const els={nacimiento:'c-nacimiento',alt:'c-alt',sexo:'c-sexo',activ:'c-activ',obj:'c-obj'};
+    Object.entries(els).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.value=S.perfil[k]||'';});
+    window.previewEdad();
+  }
+};
+
+function mostrarPerfil(){
+  if(!S.perfil)return;
+  const edad=calcEdad(S.perfil.nacimiento);
+  const activLabels={1.2:'Sedentario',1.375:'Ligero',1.55:'Moderado',1.725:'Activo',1.9:'Muy activo'};
+  const resumen=document.getElementById('perfil-resumen');
+  const form=document.getElementById('perfil-form');
+  if(resumen)resumen.style.display='block';
+  if(form)form.style.display='none';
+  const edEl=document.getElementById('p-edad-display');
+  const alEl=document.getElementById('p-alt-display');
+  const sxEl=document.getElementById('p-sexo-display');
+  const acEl=document.getElementById('p-activ-display');
+  if(edEl)edEl.textContent=edad;
+  if(alEl)alEl.textContent=S.perfil.alt;
+  if(sxEl)sxEl.textContent=S.perfil.sexo==='h'?'♂ Hombre':'♀ Mujer';
+  if(acEl)acEl.textContent=activLabels[S.perfil.activ]||'Moderado';
+}
+
+
 window.calcCals=function(){
   const perfil=S.perfil;
   if(!perfil){return;}
