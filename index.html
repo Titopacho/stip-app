@@ -400,6 +400,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
             <button onclick="document.getElementById('foto-cam').click()" style="flex:1;padding:10px;border-radius:8px;background:#c8f230;color:#0d1400;border:none;font-size:13px;font-weight:800;cursor:pointer">📷 Cámara</button>
             <button onclick="document.getElementById('foto-gal').click()" style="flex:1;padding:10px;border-radius:8px;background:#2e3336;color:#f4f4f4;border:1px solid #444c52;font-size:13px;font-weight:700;cursor:pointer">🖼️ Galería</button>
           </div>
+          <button id="btn-del-foto" onclick="eliminarFoto()" style="display:none;margin-top:10px;width:100%;padding:8px;border-radius:8px;background:#3a0e18;color:#ff5068;border:1px solid #6b1828;font-size:12px;font-weight:700;cursor:pointer">🗑️ Eliminar foto</button>
         </div>
         <input type="file" id="foto-cam" accept="image/*" capture="environment" style="display:none" onchange="handleFoto(event)">
         <input type="file" id="foto-gal" accept="image/*" style="display:none" onchange="handleFoto(event)">
@@ -959,6 +960,7 @@ window.handleFoto=function(e){
       document.getElementById('up-icon').style.display='none';
       document.getElementById('up-btns').style.display='none';
       document.getElementById('upzone').classList.add('has');
+      document.getElementById('btn-del-foto').style.display='block';
       document.getElementById('up-txt').textContent='Analizando con Gemini IA...';
       analizarConGemini(S.fotoB64,'image/jpeg');
     };
@@ -1036,6 +1038,25 @@ window.selAlimento=function(n,k,p,c,g){
   document.getElementById('f-gras').value=g||Math.round(k*0.30/9);
   document.getElementById('db-results').innerHTML='';
   toast('Seleccionado: '+k+' kcal');
+};
+
+window.eliminarFoto=function(){
+  S.fotoB64=null;
+  document.getElementById('prev').src='';
+  document.getElementById('prev').style.display='none';
+  document.getElementById('up-icon').style.display='block';
+  document.getElementById('up-btns').style.display='flex';
+  document.getElementById('up-txt').textContent='Elige cómo agregar tu comida';
+  document.getElementById('upzone').classList.remove('has');
+  document.getElementById('btn-del-foto').style.display='none';
+  document.getElementById('ia-res-area').innerHTML='';
+  document.getElementById('f-nombre').value='';
+  document.getElementById('f-cal').value='';
+  document.getElementById('f-prot').value='';
+  document.getElementById('f-carb').value='';
+  document.getElementById('f-gras').value='';
+  document.getElementById('foto-cam').value='';
+  document.getElementById('foto-gal').value='';
 };
 
 window.addComida=async function(){
