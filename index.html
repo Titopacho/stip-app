@@ -652,8 +652,8 @@ window.regPeso=async function(){
   const v=parseFloat(document.getElementById('peso-inp').value),a=document.getElementById('animo-inp').value;
   if(!v||v<30||v>300){toast('Ingresa un peso válido','#ff5068');return;}
   if(!S.pesos)S.pesos=[];
-  const hoy=new Date().toISOString().split('T')[0];
-  const idxHoy=S.pesos.findIndex(p=>p.f.split('T')[0]===hoy);
+  const hoy=getFechaLocal(new Date());
+  const idxHoy=S.pesos.findIndex(p=>getFechaLocal(p.f)===hoy);
   if(idxHoy>=0){
     S.pesos[idxHoy]={v,a,f:new Date().toISOString()};
     toast('Peso de hoy actualizado ✅');calcularFechaEstimada();
@@ -969,9 +969,13 @@ window.addComida=async function(){
   await guardar();renderComidas();renderDeficit();updateHome();toast('Comida registrada +3 pts ✅');
 };
 
+function getFechaLocal(fecha){
+  const d=new Date(fecha);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 function getComidasHoy(){
-  const hoy=new Date().toISOString().split('T')[0];
-  return (S.comidas||[]).filter(c=>c.hora.split('T')[0]===hoy);
+  const hoy=getFechaLocal(new Date());
+  return (S.comidas||[]).filter(c=>getFechaLocal(c.hora)===hoy);
 }
 
 function renderComidas(){
@@ -1133,7 +1137,7 @@ function calcularFechaEstimada(){
   if(metaCal>0&&comidas.length>0){
     const diasMap={};
     comidas.forEach(c=>{
-      const d=c.hora.split('T')[0];
+      const d=getFechaLocal(c.hora);
       if(!diasMap[d])diasMap[d]=0;
       diasMap[d]+=c.cal;
     });
@@ -1245,12 +1249,12 @@ function renderHistorialDias(){
   // Group all days from pesos and comidas
   const diasMap={};
   pesos.forEach(p=>{
-    const d=p.f.split('T')[0];
+    const d=getFechaLocal(p.f);
     if(!diasMap[d])diasMap[d]={fecha:d,peso:null,comidas:[]};
     diasMap[d].peso=p.v;
   });
   comidas.forEach(c=>{
-    const d=c.hora.split('T')[0];
+    const d=getFechaLocal(c.hora);
     if(!diasMap[d])diasMap[d]={fecha:d,peso:null,comidas:[]};
     diasMap[d].comidas.push(c);
   });
