@@ -892,7 +892,9 @@ async function analizarConGemini(b64,mime){
   const apiKey=GEMINI_KEY_RC||S.geminiKey||'';
   if(!apiKey){
     document.getElementById('ia-overlay').style.display='none';
-    document.getElementById('ia-res-area').innerHTML=`<div style="background:#2a1500;border:1px solid #6b3000;border-radius:8px;padding:12px;margin-bottom:8px"><p style="font-size:12px;color:#ffbe4a">⚠️ No se pudo obtener la configuración. Intenta de nuevo.</p></div>`;
+    document.getElementById('ia-res-area').innerHTML='<div style="background:#0a1e3a;border:1px solid #1a5080;border-radius:8px;padding:12px;margin-bottom:8px"><p style="font-size:12px;color:#5ab4ff;font-weight:600">🔑 Agrega tu API key de Gemini para analizar fotos</p><p style="font-size:11px;color:#8c96a0;margin-top:4px">Ve a la pestaña Calorías y conecta tu key gratuita</p></div>';
+    document.getElementById('up-txt').textContent='Configura tu API key en Calorías';
+    renderGeminiCfg();
     return;
   }
   try{
@@ -1380,17 +1382,7 @@ window.guardarMetaRapida=async function(i){
 };
 
 
-window.toggleRecMeta=async function(i){
-  const m=S.metas[i];
-  m.recOn=!m.recOn;
-  if(m.recOn&&Notification.permission!=='granted'){
-    const perm=await Notification.requestPermission();
-    if(perm!=='granted'){m.recOn=false;toast('Activa permisos de notificación en Configuración','#ff5068');return;}
-  }
-  if(m.recOn)programarRecordatorioMeta(m.n,m.recHora||'08:00');
-  await guardar();renderMetas();
-  toast(m.recOn?'🔔 Recordatorio activado':'🔕 Recordatorio desactivado');
-};
+
 
 // Init notifications on app load
 setTimeout(()=>{
