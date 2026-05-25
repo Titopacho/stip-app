@@ -493,6 +493,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getRemoteConfig, fetchAndActivate, getValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCwV4JleSBTPfLrGo0U9wnKzr4bQue32Ic",
@@ -506,6 +507,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const remoteConfig = getRemoteConfig(app);
+remoteConfig.settings = { minimumFetchIntervalMillis: 3600000 };
+remoteConfig.defaultConfig = { GEMINI_KEY: '' };
 const googleProvider = new GoogleAuthProvider();
 
 const FRASES=[["Cada registro que haces es una promesa que te cumples.","Tu yo del futuro"],["No tienes que ser perfecto, solo consistente.","Anónimo"],["El cuerpo logra lo que la mente cree.","Proverbio"],["Seis años intentando no es fracaso. Es experiencia.","Tu historia"],["La disciplina es elegir lo que más quieres sobre lo que quieres ahora.","Lincoln"]];
@@ -516,7 +520,7 @@ const DB=[{n:'Arroz blanco (1 taza)',k:206},{n:'Arroz con pollo',k:420},{n:'Band
 
 
 let S={pesos:[],metas:[],comidas:[],pts:0,racha:0,metaCal:0,gymExtra:0,fotoB64:null,fotoMime:'image/jpeg'};
-const GEMINI_KEY_RC='AIzaSyCC3tDGKC46i3Eb4AH9Bxben7SrybD1wEg';
+let GEMINI_KEY_RC='';
 let updI=null,filtroCat='todas',currentUID='';
 
 // ---- FIREBASE AUTH ----
@@ -586,6 +590,10 @@ onAuthStateChanged(auth,async(user)=>{
   if(user){
     currentUID=user.uid;
     await cargarDatos(user.uid);
+    try {
+      await fetchAndActivate(remoteConfig);
+      GEMINI_KEY_RC = getValue(remoteConfig, 'GEMINI_KEY').asString();
+    } catch(e) { console.log('RC error:', e); }
 
     const nombre=user.displayName||user.email.split('@')[0];
     document.getElementById('user-name-hdr').textContent=nombre;
