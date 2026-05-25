@@ -379,7 +379,7 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
       </div>
       <div id="def-res"><div class="info">Calcula tus calorías arriba para ver el déficit</div></div>
       <p class="sec">Registrar comida <span class="tag-blue">IA GEMINI</span></p>
-      <div id="gemini-cfg" style="margin-bottom:10px"></div>
+<div style="background:#161a0e;border:1px solid #3a5000;border-radius:8px;padding:8px 12px;margin-bottom:10px"><span style="font-size:11px;color:#c8f230;font-weight:600">✅ Gemini IA activa</span></div>
       <div style="background:#161a0e;border:1px solid #3a5000;border-radius:8px;padding:10px 14px;margin-bottom:10px"><span style="font-size:12px;color:#c8f230;font-weight:600">✅ Gemini IA activa — análisis automático de fotos</span></div>
 <div style="background:#161a0e;border:1px solid #3a5000;border-radius:8px;padding:10px 14px;margin-bottom:10px"><span style="font-size:12px;color:#c8f230;font-weight:600">✅ Gemini IA activa — análisis automático de fotos</span></div>
       <div class="card" style="margin-top:10px">
@@ -515,8 +515,8 @@ const CAT_LABEL={salud:'Salud',estudio:'Estudio',habito:'Hábito',personal:'Pers
 const DB=[{n:'Arroz blanco (1 taza)',k:206},{n:'Arroz con pollo',k:420},{n:'Bandeja paisa',k:1100},{n:'Ajiaco bogotano',k:350},{n:'Sancocho de pollo',k:280},{n:'Frijoles (1 taza)',k:230},{n:'Lentejas (1 taza)',k:230},{n:'Papa cocida',k:130},{n:'Papa frita',k:365},{n:'Plátano maduro frito',k:180},{n:'Patacón',k:130},{n:'Arepa de maíz',k:160},{n:'Arepa con queso',k:220},{n:'Pan blanco (1 tajada)',k:80},{n:'Huevo frito',k:90},{n:'Huevo revuelto (2)',k:180},{n:'Pechuga de pollo (150g)',k:165},{n:'Muslo de pollo',k:210},{n:'Carne molida (100g)',k:215},{n:'Bistec de res (150g)',k:280},{n:'Tilapia (150g)',k:160},{n:'Salmón (150g)',k:280},{n:'Atún en lata',k:120},{n:'Ensalada mixta',k:40},{n:'Ensalada con pollo',k:220},{n:'Aguacate (½)',k:120},{n:'Banano',k:90},{n:'Manzana',k:80},{n:'Naranja',k:60},{n:'Mango',k:135},{n:'Papaya (1 taza)',k:55},{n:'Leche entera (1 vaso)',k:150},{n:'Leche descremada',k:90},{n:'Yogur natural',k:140},{n:'Queso campesino (50g)',k:150},{n:'Chocolate caliente',k:160},{n:'Café negro',k:5},{n:'Café con leche',k:80},{n:'Jugo naranja natural',k:110},{n:'Agua panela con limón',k:90},{n:'Gaseosa (1 vaso)',k:130},{n:'Almuerzo ejecutivo',k:750},{n:'Empanada de pipián',k:180},{n:'Tamale bogotano',k:420},{n:'Changua',k:180},{n:'Caldo de costilla',k:220},{n:'Buñuelo',k:200},{n:'Pandebono',k:190},{n:'Mogolla',k:160},{n:'Pizza (1 porción)',k:285},{n:'Hamburguesa',k:450},{n:'Perro caliente',k:290},{n:'Sopa de verduras',k:120},{n:'Avena con leche',k:290},{n:'Granola (½ taza)',k:200},{n:'Maní (puñado)',k:165},{n:'Almendras (puñado)',k:170},{n:'Pollo asado (150g)',k:220},{n:'Cerdo asado (150g)',k:260},{n:'Chorizo',k:180},{n:'Chicharrón',k:290},{n:'Mondongo',k:320},{n:'Ceviche de camarón',k:180}];
 
 
-let S={pesos:[],metas:[],comidas:[],pts:0,racha:0,metaCal:0,gymExtra:0,geminiKey:'',fotoB64:null,fotoMime:'image/jpeg'};
-let GEMINI_KEY_RC='';
+let S={pesos:[],metas:[],comidas:[],pts:0,racha:0,metaCal:0,gymExtra:0,fotoB64:null,fotoMime:'image/jpeg'};
+const GEMINI_KEY_RC='AIzaSyCC3tDGKC46i3Eb4AH9Bxben7SrybD1wEg';
 let updI=null,filtroCat='todas',currentUID='';
 
 // ---- FIREBASE AUTH ----
@@ -572,7 +572,6 @@ async function cargarDatos(uid){
   if(snap.exists()){S={...S,...snap.data()};}
   else{await setDoc(ref,S);}
   // Load Gemini key from user's own saved key
-  if(S.geminiKey)GEMINI_KEY_RC=S.geminiKey;
 }
 
 async function guardar(){
@@ -607,7 +606,6 @@ onAuthStateChanged(auth,async(user)=>{
 function toast(m,col){const t=document.getElementById('toast');t.textContent=m;t.style.background=col||'#c8f230';t.style.color=col?'#fff':'#0d1400';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 window.irA=function(p){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('s-'+p).classList.add('active');const map={home:0,cals:1,metas:2,prog:3};document.querySelectorAll('.bnav-btn').forEach((b,i)=>b.classList.toggle('act',i===map[p]));if(p==='prog')renderProg();if(p==='metas')renderMetas();if(p==='cals')syncPesoCals();};
 window.syncPesoCals=function(){
-  renderGeminiCfg();
   const pesos=S.pesos||[];
   const pesoDisplay=document.getElementById('c-peso-display');
   if(pesoDisplay){
@@ -625,12 +623,7 @@ function initUI(){
   const ov=document.getElementById('ia-overlay');
   if(ov)ov.style.display='none';
   // Init gemini key
-  if(S.geminiKey){
-    const banner=document.getElementById('gemini-key-banner');
-    const ok=document.getElementById('gemini-key-ok');
-    if(banner)banner.style.display='none';
-    if(ok)ok.style.display='flex';
-  }
+
   
   if(S.metaCal){document.getElementById('def-meta').textContent=S.metaCal;}
   const f=FRASES[Math.floor(Math.random()*FRASES.length)];
@@ -889,13 +882,12 @@ window.handleFoto=function(e){
 
 async function analizarConGemini(b64,mime){
   document.getElementById('ia-overlay').style.display='flex';
-  const apiKey=GEMINI_KEY_RC||S.geminiKey||'';
+  const apiKey=GEMINI_KEY_RC;
   if(!apiKey){
     document.getElementById('ia-overlay').style.display='none';
     document.getElementById('ia-res-area').innerHTML='<div style="background:#0a1e3a;border:1px solid #1a5080;border-radius:8px;padding:12px;margin-bottom:8px"><p style="font-size:12px;color:#5ab4ff;font-weight:600">🔑 Agrega tu API key de Gemini para analizar fotos</p><p style="font-size:11px;color:#8c96a0;margin-top:4px">Ve a la pestaña Calorías y conecta tu key gratuita</p></div>';
     document.getElementById('up-txt').textContent='Configura tu API key en Calorías';
-    renderGeminiCfg();
-    return;
+      return;
   }
   try{
     const models=['gemini-3.1-flash-lite','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-1.5-flash'];
@@ -938,47 +930,15 @@ async function analizarConGemini(b64,mime){
   }
 }
 
-window.guardarGeminiKey=async function(){
-  const k=document.getElementById('gemini-key-inp').value.trim();
-  if(!k||!k.startsWith('AIza')){toast('API key inválida — debe empezar con AIza','#ff5068');return;}
-  S.geminiKey=k;
-  await guardar();
-  document.getElementById('gemini-key-banner').style.display='none';
-  document.getElementById('gemini-key-ok').style.display='flex';
-  toast('✅ Gemini IA conectada');
-};
 
-window.cambiarGeminiKey=function(){
-  document.getElementById('gemini-key-banner').style.display='block';
-  document.getElementById('gemini-key-ok').style.display='none';
-  document.getElementById('gemini-key-inp').value='';
-};
 
-window.renderGeminiCfg=function(){
-  const el=document.getElementById('gemini-cfg');
-  if(!el)return;
-  if(S.geminiKey){
-    el.innerHTML='<div style="background:#161a0e;border:1px solid #3a5000;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:#c8f230;font-weight:600">✅ Gemini IA conectada</span><button onclick="cambiarGeminiKey()" style="background:none;border:none;color:#8c96a0;font-size:11px;cursor:pointer">Cambiar key</button></div>';
-  } else {
-    el.innerHTML='<div style="background:#0a1e3a;border:1px solid #1a5080;border-radius:8px;padding:12px"><div style="font-size:12px;color:#5ab4ff;font-weight:700;margin-bottom:6px">🔑 Conecta Gemini IA (gratis)</div><div style="font-size:11px;color:#8c96a0;margin-bottom:8px">Obtén tu key gratis en <strong style="color:#5ab4ff">aistudio.google.com</strong></div><div style="display:flex;gap:8px"><input id="gemini-key-inp" type="password" placeholder="AIza..." class="inp" style="margin-bottom:0;flex:1;font-size:13px"><button onclick="guardarGeminiKey()" style="padding:0 12px;height:44px;border-radius:8px;background:#5ab4ff;color:#0a1e3a;font-size:13px;font-weight:800;border:none;cursor:pointer">OK</button></div></div>';
-  }
-};
 
-window.guardarGeminiKey=async function(){
-  const k=document.getElementById('gemini-key-inp').value.trim();
-  if(!k||!k.startsWith('AIza')){toast('Key inválida','#ff5068');return;}
-  S.geminiKey=k;
-  GEMINI_KEY_RC=k;
-  await guardar();
-  renderGeminiCfg();
-  toast('✅ Gemini conectada');
-};
 
-window.cambiarGeminiKey=function(){
-  S.geminiKey='';
-  GEMINI_KEY_RC='';
-  renderGeminiCfg();
-};
+
+
+
+
+
 
 window.buscarLocal=function(q){const el=document.getElementById('db-results');if(q.trim().length<2){el.innerHTML='';return;}const res=DB.filter(a=>a.n.toLowerCase().includes(q.toLowerCase())).slice(0,7);if(!res.length){el.innerHTML='<div class="info" style="padding:10px">No encontrado — ingresa calorías manualmente</div>';return;}el.innerHTML='<div class="db-res">'+res.map(a=>`<div class="db-item" onclick="selAlimento('${a.n.replace(/'/g,"\\'")}',${a.k})"><span>${a.n}</span><span class="db-cal">${a.k} kcal</span></div>`).join('')+'</div>';};
 window.selAlimento=function(n,k,p,c,g){
