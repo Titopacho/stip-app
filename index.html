@@ -768,20 +768,18 @@ function drawG(id){
   let html='';
 
   // Background subtle gradient area
-  html+=`<defs>
-    <linearGradient id="ga2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#c8f230" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#c8f230" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="gl2" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#8ab800"/>
-      <stop offset="100%" stop-color="#c8f230"/>
-    </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-  </defs>`;
+  if(id==='g'){
+    html+=`<defs>
+      <linearGradient id="ga2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#c8f230" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#c8f230" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="gl2" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#8ab800"/>
+        <stop offset="100%" stop-color="#c8f230"/>
+      </linearGradient>
+    </defs>`;
+  }
 
   // Y axis grid lines and labels — every 20kg
   for(let v=minV;v<=maxV;v+=10){
@@ -806,7 +804,7 @@ function drawG(id){
   if(pts.length>=2){
     const aPath='M'+pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' L')+
       ` L${pts[pts.length-1].x.toFixed(1)},${(padT+cH).toFixed(1)} L${pts[0].x.toFixed(1)},${(padT+cH).toFixed(1)} Z`;
-    html+=`<path d="${aPath}" fill="url(#ga2)"/>`;
+    html+=`<path d="${aPath}" fill="${id==='g'?'url(#ga2)':'url(#pa)'}"/>`;
     // Smooth line using cubic bezier
     let lPath=`M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
     for(let i=1;i<pts.length;i++){
@@ -814,7 +812,7 @@ function drawG(id){
       const cpx=(prev.x+curr.x)/2;
       lPath+=` C${cpx.toFixed(1)},${prev.y.toFixed(1)} ${cpx.toFixed(1)},${curr.y.toFixed(1)} ${curr.x.toFixed(1)},${curr.y.toFixed(1)}`;
     }
-    html+=`<path d="${lPath}" fill="none" stroke="url(#gl2)" stroke-width="2.5" stroke-linecap="round"/>`;
+    html+=`<path d="${lPath}" fill="none" stroke="${id==='g'?'url(#gl2)":'#5ab4ff'}" stroke-width="2.5" stroke-linecap="round"/>`;
   }
 
   // X axis day labels and vertical tick marks
@@ -1235,13 +1233,18 @@ window.guardarMetaPeso=async function(){
   if(!v||v<20||v>400){toast('Ingresa un peso válido para tu meta','#ff5068');return;}
   S.metaPeso=v;
   await guardar();
-  // Update compact display
   const kgDisp=document.getElementById('meta-kg-display');
   if(kgDisp)kgDisp.textContent=v;
+  // Close modal first
+  const modal=document.getElementById('modal-meta-peso');
+  if(modal){modal.style.display='none';modal.style.visibility='hidden';}
+  // Show toast
+  toast('¡Meta de '+v+' kg guardada! 🎯');
+  // Update graph
   drawG('g');
   calcularFechaEstimada();
-  cerrarModalMeta();
-  toast('Meta: '+v+' kg guardada 🎯');
+  // Reset modal visibility for next open
+  setTimeout(()=>{if(modal)modal.style.visibility='';},300);
 };
 
 function calcularFechaEstimada(){
