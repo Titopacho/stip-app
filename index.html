@@ -1253,10 +1253,12 @@ function calcularFechaEstimada(){
   const comidas=S.comidas||[];
   const metaCal=S.metaCal||0;
 
+  // Always show metaPeso if it exists
+  const kgDispAlways=document.getElementById('meta-kg-display');
+  if(kgDispAlways)kgDispAlways.textContent=metaPeso?metaPeso:'—';
+
   if(!metaPeso||!pesos.length){
-    document.getElementById('meta-estimado').textContent='Toca ✏️ para establecer tu meta';
-    const kgDisp=document.getElementById('meta-kg-display');
-    if(kgDisp)kgDisp.textContent='—';
+    document.getElementById('meta-estimado').textContent=metaPeso?('Meta: '+metaPeso+' kg · registra tu peso'):'Toca ✏️ para establecer tu meta';
     const dd2=document.getElementById('meta-dias-display');
   if(dd2)dd2.textContent='';
     const mfmh=document.getElementById('meta-fecha-modal');if(mfmh)mfmh.style.display='none';
