@@ -1423,7 +1423,53 @@ function renderHistorialDias(){
 
   const dias=Object.values(diasMap).sort((a,b)=>b.fecha.localeCompare(a.fecha));
 
-  el.innerHTML=dias.map(dia=>{
+  // === ANÁLISIS GLOBAL ===
+  let resumenHTML='';
+  if(pesos.length>=2&&S.metaCal){
+    // Días con comidas registradas y su consumo
+    const diasConComida=dias.filter(d=>d.comidas.length>0);
+    const consumoPromedio=diasConComida.length
+      ? diasConComida.reduce((a,d)=>a+d.comidas.reduce((s,c)=>s+c.cal,0),0)/diasConComida.length
+      : S.metaCal;
+
+    // Rango total de días desde primer al último peso
+    const sortedPesos=[...pesos].sort((a,b)=>new Date(a.f)-new Date(b.f));
+    const primerFecha=new Date(getFechaLocal(sortedPesos[0].f));
+    const ultimaFecha=new Date(getFechaLocal(sortedPesos[sortedPesos.length-1].f));
+    const totalDias=Math.max(1,Math.round((ultimaFecha-primerFecha)/(1000*60*60*24))+1);
+
+    // Gasto diario estimado (TDEE) = metaCal + déficit objetivo
+    // Asumimos que metaCal ya es el objetivo con déficit, el gasto real es metaCal+500 si era déficit
+    const gastoDiario=S.metaCal+(S.perfil&&S.perfil.obj==='deficit'?500:0);
+
+    // Calorías totales (días sin registro usan promedio)
+    const calConsumidasTotal=Math.round(consumoPromedio*totalDias);
+    const calGastadasTotal=Math.round(gastoDiario*totalDias);
+
+    // Kilos que debió perder = déficit acumulado / 7700
+    const deficitAcumulado=calGastadasTotal-calConsumidasTotal;
+    const kgDebioPerder=deficitAcumulado/7700;
+
+    // Kilos reales
+    const kgReal=sortedPesos[0].v-sortedPesos[sortedPesos.length-1].v;
+
+    const diasSinRegistro=totalDias-diasConComida.length;
+
+    resumenHTML='<div style="background:linear-gradient(135deg,#1a2200,#161a0e);border:1px solid #3a5000;border-radius:14px;padding:16px;margin-bottom:16px">'+
+      '<div style="font-size:13px;font-weight:700;color:#c8f230;margin-bottom:12px">📊 Análisis del período ('+totalDias+' días)</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
+        '<div style="background:#222629;border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:700;color:#ff5068">'+calGastadasTotal.toLocaleString()+'</div><div style="font-size:10px;color:#8c96a0">kcal gastadas total</div></div>'+
+        '<div style="background:#222629;border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:700;color:#5ab4ff">'+calConsumidasTotal.toLocaleString()+'</div><div style="font-size:10px;color:#8c96a0">kcal consumidas total</div></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+        '<div style="background:#222629;border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:700;color:#ffbe4a">'+(kgDebioPerder>=0?'−':'+')+Math.abs(kgDebioPerder).toFixed(1)+' kg</div><div style="font-size:10px;color:#8c96a0">deberías haber perdido</div></div>'+
+        '<div style="background:#222629;border-radius:8px;padding:10px"><div style="font-size:16px;font-weight:700;color:'+(kgReal>=0?'#c8f230':'#ff5068')+'">'+(kgReal>=0?'−':'+')+Math.abs(kgReal).toFixed(1)+' kg</div><div style="font-size:10px;color:#8c96a0">perdiste realmente</div></div>'+
+      '</div>'+
+      (diasSinRegistro>0?'<div style="font-size:10px;color:#8c96a0;margin-top:10px;text-align:center">* '+diasSinRegistro+' días sin registro estimados con tu promedio de '+Math.round(consumoPromedio)+' kcal/día</div>':'')+
+    '</div>';
+  }
+
+  el.innerHTML=resumenHTML+dias.map(dia=>{
     const fecha=new Date(dia.fecha+'T12:00:00');
     const fechaStr=fecha.toLocaleDateString('es-CO',{weekday:'long',day:'2-digit',month:'long'});
     const totalCal=dia.comidas.reduce((a,c)=>a+c.cal,0);
