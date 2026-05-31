@@ -495,7 +495,18 @@ select.inp option{background:#1a1d1f;color:#f4f4f4}
   </div>
 
   <div class="mwrap" id="mod-meta"><div class="mbox"><h3>Nueva meta</h3><input class="inp" id="m-nombre" placeholder="Ej: Leer 12 libros, Aprender inglés"><select class="inp" id="m-cat"><option value="salud">💪 Salud / Peso</option><option value="estudio">📚 Estudio</option><option value="habito">🔁 Hábito</option><option value="personal">⭐ Personal</option></select><div class="row" style="margin-bottom:8px"><div style="flex:1"><div style="font-size:11px;color:#8c96a0;margin-bottom:4px">Inicio</div><input class="inp" id="m-ini" type="number" placeholder="0" style="margin-bottom:0"></div><div style="flex:1"><div style="font-size:11px;color:#8c96a0;margin-bottom:4px">Objetivo</div><input class="inp" id="m-obj" type="number" placeholder="100" style="margin-bottom:0"></div></div><input class="inp" id="m-uni" placeholder="Unidad: libros, horas, km, %..."><button class="btn-p" onclick="guardarMeta()">✅ Crear meta</button><button class="btn-s" onclick="cerrarMod('mod-meta')">Cancelar</button></div></div>
-  <div class="mwrap" id="mod-upd"><div class="mbox"><h3 id="upd-t">Actualizar progreso</h3><div class="info" id="upd-s" style="margin-bottom:10px"></div><input class="inp" type="number" id="upd-v" placeholder="Nuevo valor actual"><button class="btn-p" onclick="guardarUpd()">✅ Guardar progreso</button><button class="btn-s" onclick="cerrarMod('mod-upd')">Cancelar</button></div></div>
+  <div class="mwrap" id="mod-upd"><div class="mbox"><h3 id="upd-t">Actualizar progreso</h3><div class="info" id="upd-s" style="margin-bottom:12px"></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px">
+      <button onclick="cambiarUpd(-1)" style="width:52px;height:52px;border-radius:50%;background:#2e3336;border:1px solid #444c52;color:#f4f4f4;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+      <div style="text-align:center">
+        <input class="inp" type="number" id="upd-v" style="width:120px;font-size:24px;font-weight:700;text-align:center;margin-bottom:0">
+        <div style="font-size:11px;color:#8c96a0;margin-top:4px" id="upd-uni"></div>
+      </div>
+      <button onclick="cambiarUpd(1)" style="width:52px;height:52px;border-radius:50%;background:#c8f230;border:none;color:#0d1400;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+    </div>
+    <button class="btn-p" onclick="guardarUpd()">✅ Guardar progreso</button>
+    <button class="btn-s" onclick="cerrarMod('mod-upd')">Cancelar</button>
+  </div></div>
   
 <div class="ia-overlay" id="ia-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:60;align-items:center;justify-content:center;flex-direction:column;gap:16px"><div class="ia-spinner"></div><p style="color:#f4f4f4;font-size:15px;font-weight:600">Analizando tu foto...</p></div>
 <div class="toast" id="toast"></div>
@@ -531,7 +542,7 @@ const CAT_LABEL={salud:'Salud',estudio:'Estudio',habito:'Hábito',personal:'Pers
 const DB=[{n:'Arroz blanco (1 taza)',k:206},{n:'Arroz con pollo',k:420},{n:'Bandeja paisa',k:1100},{n:'Ajiaco bogotano',k:350},{n:'Sancocho de pollo',k:280},{n:'Frijoles (1 taza)',k:230},{n:'Lentejas (1 taza)',k:230},{n:'Papa cocida',k:130},{n:'Papa frita',k:365},{n:'Plátano maduro frito',k:180},{n:'Patacón',k:130},{n:'Arepa de maíz',k:160},{n:'Arepa con queso',k:220},{n:'Pan blanco (1 tajada)',k:80},{n:'Huevo frito',k:90},{n:'Huevo revuelto (2)',k:180},{n:'Pechuga de pollo (150g)',k:165},{n:'Muslo de pollo',k:210},{n:'Carne molida (100g)',k:215},{n:'Bistec de res (150g)',k:280},{n:'Tilapia (150g)',k:160},{n:'Salmón (150g)',k:280},{n:'Atún en lata',k:120},{n:'Ensalada mixta',k:40},{n:'Ensalada con pollo',k:220},{n:'Aguacate (½)',k:120},{n:'Banano',k:90},{n:'Manzana',k:80},{n:'Naranja',k:60},{n:'Mango',k:135},{n:'Papaya (1 taza)',k:55},{n:'Leche entera (1 vaso)',k:150},{n:'Leche descremada',k:90},{n:'Yogur natural',k:140},{n:'Queso campesino (50g)',k:150},{n:'Chocolate caliente',k:160},{n:'Café negro',k:5},{n:'Café con leche',k:80},{n:'Jugo naranja natural',k:110},{n:'Agua panela con limón',k:90},{n:'Gaseosa (1 vaso)',k:130},{n:'Almuerzo ejecutivo',k:750},{n:'Empanada de pipián',k:180},{n:'Tamale bogotano',k:420},{n:'Changua',k:180},{n:'Caldo de costilla',k:220},{n:'Buñuelo',k:200},{n:'Pandebono',k:190},{n:'Mogolla',k:160},{n:'Pizza (1 porción)',k:285},{n:'Hamburguesa',k:450},{n:'Perro caliente',k:290},{n:'Sopa de verduras',k:120},{n:'Avena con leche',k:290},{n:'Granola (½ taza)',k:200},{n:'Maní (puñado)',k:165},{n:'Almendras (puñado)',k:170},{n:'Pollo asado (150g)',k:220},{n:'Cerdo asado (150g)',k:260},{n:'Chorizo',k:180},{n:'Chicharrón',k:290},{n:'Mondongo',k:320},{n:'Ceviche de camarón',k:180}];
 
 
-let S={pesos:[],metas:[],comidas:[],pts:0,racha:0,metaCal:0,gymExtra:0,fotoB64:null,fotoMime:'image/jpeg'};
+let S={pesos:[],metas:[],comidas:[],pts:0,racha:0,metaCal:0,gymExtra:0,metaPeso:0,fotoB64:null,fotoMime:'image/jpeg'};
 let GEMINI_KEY_RC='';
 let updI=null,filtroCat='todas',currentUID='';
 
@@ -659,7 +670,37 @@ function initUI(){
   if(kgDisp)kgDisp.textContent=S.metaPeso?S.metaPeso:'—';
 }
 
-function updateHome(){document.getElementById('h-racha').textContent=S.racha;document.getElementById('h-pts').textContent=S.pts;document.getElementById('h-metas').textContent=S.metas.length;if(S.pesos&&S.pesos.length)document.getElementById('h-peso').textContent=S.pesos[S.pesos.length-1].v.toFixed(1);}
+function calcularRacha(){
+  const pesos=S.pesos||[];
+  if(!pesos.length)return 0;
+  // Sort by date
+  const sorted=[...pesos].sort((a,b)=>new Date(a.f)-new Date(b.f));
+  const hoy=getFechaLocal(new Date());
+  let racha=0;
+  // Check consecutive days ending today or yesterday
+  let checkDate=new Date();
+  // If no registro today, start checking from yesterday
+  const ultimoDia=getFechaLocal(sorted[sorted.length-1].f);
+  if(ultimoDia!==hoy){
+    // Last registro was not today - check if it was yesterday
+    const ayer=new Date();
+    ayer.setDate(ayer.getDate()-1);
+    const ayerStr=getFechaLocal(ayer);
+    if(ultimoDia!==ayerStr)return 0; // broke the streak
+    checkDate.setDate(checkDate.getDate()-1);
+  }
+  // Count consecutive days backwards
+  for(let i=0;i<365;i++){
+    const dStr=getFechaLocal(checkDate);
+    const found=sorted.some(p=>getFechaLocal(p.f)===dStr);
+    if(found){racha++;}
+    else{break;}
+    checkDate.setDate(checkDate.getDate()-1);
+  }
+  return racha;
+}
+
+function updateHome(){document.getElementById('h-racha').textContent=calcularRacha();document.getElementById('h-pts').textContent=S.pts;document.getElementById('h-metas').textContent=S.metas.length;if(S.pesos&&S.pesos.length)document.getElementById('h-peso').textContent=S.pesos[S.pesos.length-1].v.toFixed(1);}
 
 window.regPeso=async function(){
   const v=parseFloat(document.getElementById('peso-inp').value),a=document.getElementById('animo-inp').value;
@@ -669,15 +710,15 @@ window.regPeso=async function(){
   const idxHoy=S.pesos.findIndex(p=>getFechaLocal(p.f)===hoy);
   if(idxHoy>=0){
     S.pesos[idxHoy]={v,a,f:new Date().toISOString()};
-    toast('Peso de hoy actualizado ✅');calcularFechaEstimada();
+    toast('Peso de hoy actualizado ✅');
   } else {
     S.pesos.push({v,a,f:new Date().toISOString()});
-    S.racha=(S.racha||0)+1;
+    // Only increment racha, never reset it automatically
     S.pts=(S.pts||0)+5;
-    toast('¡Peso registrado! +5 pts 🔥');calcularFechaEstimada();
+    toast('¡Peso registrado! +5 pts 🔥');
   }
   document.getElementById('peso-inp').value='';
-  await guardar();updateHome();drawG('g');syncPesoCals();
+  await guardar();updateHome();drawG('g');drawG('p');syncPesoCals();calcularFechaEstimada();
 };
 
 function drawG(id){
@@ -1143,7 +1184,22 @@ function renderMetas(){
   el.innerHTML=html;
 }
 
-window.abrirUpd=function(i){updI=i;const m=(S.metas||[])[i];document.getElementById('upd-t').textContent=m.n;document.getElementById('upd-s').textContent=`Actual: ${m.actual} ${m.uni} → Objetivo: ${m.meta} ${m.uni}`;document.getElementById('upd-v').value='';document.getElementById('mod-upd').classList.add('open');};
+window.abrirUpd=function(i){
+  updI=i;
+  const m=(S.metas||[])[i];
+  document.getElementById('upd-t').textContent=m.n;
+  document.getElementById('upd-s').textContent='Actual: '+m.actual+' '+m.uni+' → Objetivo: '+m.meta+' '+m.uni;
+  document.getElementById('upd-v').value=m.actual||0;
+  const uniEl=document.getElementById('upd-uni');
+  if(uniEl)uniEl.textContent=m.uni;
+  document.getElementById('mod-upd').classList.add('open');
+};
+window.cambiarUpd=function(delta){
+  const inp=document.getElementById('upd-v');
+  const current=parseFloat(inp.value)||0;
+  inp.value=(current+delta).toFixed(current%1!==0?1:0);
+};
+
 window.guardarUpd=async function(){const v=parseFloat(document.getElementById('upd-v').value);if(isNaN(v)){toast('Ingresa un valor','#ff5068');return;}const m=S.metas[updI];m.actual=v;const p=pct(m);if(p>=100){S.pts=(S.pts||0)+50;toast('🎉 META COMPLETADA +50 pts');}else{S.pts=(S.pts||0)+10;toast('Actualizado +10 pts 📈');}await guardar();cerrarMod('mod-upd');updateHome();renderMetas();};
 window.delMeta=async function(i){S.metas.splice(i,1);await guardar();updateHome();renderMetas();toast('Meta eliminada');};
 window.cerrarMod=function(id){
