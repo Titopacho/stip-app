@@ -812,7 +812,7 @@ function drawG(id){
       const cpx=(prev.x+curr.x)/2;
       lPath+=` C${cpx.toFixed(1)},${prev.y.toFixed(1)} ${cpx.toFixed(1)},${curr.y.toFixed(1)} ${curr.x.toFixed(1)},${curr.y.toFixed(1)}`;
     }
-    html+=`<path d="${lPath}" fill="none" stroke="${id==='g'?'url(#gl2)":'#5ab4ff'}" stroke-width="2.5" stroke-linecap="round"/>`;
+    html+=`<path d="${lPath}" fill="none" stroke="${id==='g'?'url(#gl2)':'#5ab4ff'}" stroke-width="2.5" stroke-linecap="round"/>`;
   }
 
   // X axis day labels and vertical tick marks
